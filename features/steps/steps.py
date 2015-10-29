@@ -1,5 +1,5 @@
 #from behave_http.steps import append_path
-from utils import append_path
+from utils import append_path, get_UWSName
 from lxml import etree as et
 #from uws import Job
 import requests
@@ -108,47 +108,37 @@ def step_impl(context, attribute, value):
 @then('the UWS element "{element}" should exist')
 def step_impl(context, element):
     parsed = et.fromstring(str(context.response.text))
-    uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"
-    uwselement = et.QName(uws_1_namespace, element)
     #raise NotImplementedError("%r" % parsed)
-    foundvalue = parsed.find(uwselement, namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UWSName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).is_not_none()
 
 @then('the UWS root element is "{root}"')
 def step_impl(context, root):
     parsed = et.fromstring(str(context.response.text))
-    uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"
-    uwsroot = et.QName(uws_1_namespace, root)
     foundroot = parsed.tag
     #raise NotImplementedError("%r" % foundroot)
-    ensure(foundroot).equals(uwsroot)
+    ensure(foundroot).equals(get_UWSName(root))
 
 @then('the UWS element "{element}" should be one of "{values}"')
 def step_impl(context, element, values):
     #raise NotImplementedError('%r' %  context.response.text)
     parsed = et.fromstring(str(context.response.text))
-    uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"
-    uwselement = et.QName(uws_1_namespace, element)
-    foundvalue = parsed.find(uwselement, namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UWSName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).is_in([value.strip() for value in values.split(',')])
 
 @then('the UWS element "{element}" should be "{value}"')
 def step_impl(context, element, value):
     #raise NotImplementedError('%r' %  context.response.text)
     parsed = et.fromstring(str(context.response.text))
-    uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"
-    uwselement  = et.QName(uws_1_namespace, element)
-    foundvalue = parsed.find(uwselement, namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UWSName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).equals(value)
 
 @then('all UWS elements "{element}" should be one of "{values}"')
 def step_impl(context, element, values):
     values = [value.strip() for value in values.split(',')]
     parsed = et.fromstring(str(context.response.text))
-    uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"
-    uwselement = et.QName(uws_1_namespace, element)
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(uwselement), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UWSName(element)), namespaces=parsed.nsmap)
     #raise NotImplementedError('%r, %r' % (elementlist, uwselement))
     for elem in elementlist:
         ensure(elem.text).is_in(values)
@@ -157,15 +147,20 @@ def step_impl(context, element, values):
 # TODO: this also validates as True, if there is no job at all
 def step_impl(context, element, value):
     parsed = et.fromstring(str(context.response.text))
-    uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"
-    uwselement = et.QName(uws_1_namespace, element)
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(uwselement), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UWSName(element)), namespaces=parsed.nsmap)
     for elem in elementlist:
         ensure(elem.text).equals(value)
 
-#@then('the number of UWS elements "{element}" should be less or equal to "{last}"')
-#def step_impl(context, element, last)
+@then('the number of UWS elements "{element}" should be less than or equal to "{last}"')
+# TODO: this also validates as True, if there is no job at all
+def step_impl(context, element, last):
+    parsed = et.fromstring(str(context.response.text))
+    count = len(parsed.findall(get_UWSName(element), namespaces=parsed.nsmap))
+    ensure(count).is_less_than_or_equal_to(last)
+
+
+
 
 # job specific
 @when('I create a new job with')
@@ -197,8 +192,6 @@ def step_impl(context):
     # passing jobId here works fine!
     # Need to check, if I can also pass jobId from the top level in features.
     # Can I reuse scenarios in the same way as steps?
-
-
 
 
 @when(u'I make a POST request to "{url_path_segment}" with')

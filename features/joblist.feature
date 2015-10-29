@@ -45,20 +45,20 @@ Feature: Job list filters
     Given I set "Accept" header to "application/xml"
     When I make a GET request to "?LAST=<last>"
     Then the response status should be 200
-#    And the number of UWS elements "jobref" should be less or equal to "<last>"
+    And the number of UWS elements "jobref" should be less than or equal to "<last>"
     
     Examples: Valid numbers for last
       | last |
       | 0    |
-      | 10   |
+      | 3    |
       | 254  |
       | 3423 |
 
   Scenario Outline: LAST filter with invalid values
     Given I set "Accept" header to "application/xml"
     When I make a GET request to "?LAST=<last>"
-    # Then the response status should be one of "400, 403, 404, 405"
     Then the response status should not be 200
+    # which one should it be, exactly?? one of "400, 403, 404, 405"?
     
     Examples: Invalid numbers for last
       | last     |
