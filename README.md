@@ -3,7 +3,7 @@
 This validator uses the Python  `behave` module for integration tests for a UWS server.
 
 ## Usage:
-    `behave -D server="your_server" -D username="your_username" -D password="your_password"`
+    behave -D server="your_server" -D username="your_username" -D password="your_password"
 
 Currently, the validator expects that the service is protected with basic authentication, so a username and password needs to be provided for testing. 
 
@@ -18,9 +18,12 @@ password = your_password
 ```
 
 ## TODO
+* Finish simple tests
 * Write self tests to check that xml-parsing etc. works properly
     - (cannot check exact outcome - may differ from server to server)
 * Implement checks that need to pass parameters (jobId)
+* Allow to make anonymous calls (currently requires username and password)
+* Check if it also works for non-Daiquiri webservices
 
 
 ## License:
