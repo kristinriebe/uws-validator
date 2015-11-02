@@ -3,7 +3,7 @@ Feature: User Account
   I want to access the uws-endpoint
 
   Background: Set server name, headers and user account
-    Given I set base URL to "uws/query"
+    Given I set base URL to user-defined value
     And I set BasicAuth username and password to user-defined values
 
   Scenario: Ensure user can access UWS endpoint

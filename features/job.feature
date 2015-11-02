@@ -3,7 +3,7 @@ Feature: Job
   I want to create and access a job
 
   Background: Set server name, headers and user account
-    Given I set base URL to "uws/query"
+    Given I set base URL to user-defined value
     And I set BasicAuth username and password to user-defined values
 
 #  Scenario: Test POST request
@@ -60,3 +60,5 @@ Feature: Job
 #    And the response body should contain "PENDING"
 #    #And the element "phase" should be "PENDING"
 #    # Now I should remove the job!!
+
+# TODO: continue with WAIT parameter for PENDING job

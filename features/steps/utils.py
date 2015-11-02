@@ -12,8 +12,12 @@ def append_path(url, path):
 ## end
 
 
-def get_UWSName(element):
+def get_UwsName(element):
     uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"
     uwselement = et.QName(uws_1_namespace, element)
     return uwselement
 
+def get_XlinkName(element):
+    xlink_namespace = "http://www.w3.org/1999/xlink"
+    xlinkelement = et.QName(xlink_namespace, element)
+    return xlinkelement

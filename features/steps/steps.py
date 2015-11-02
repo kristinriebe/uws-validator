@@ -1,5 +1,5 @@
 #from behave_http.steps import append_path
-from utils import append_path, get_UWSName
+from utils import append_path, get_UwsName, get_XlinkName
 from lxml import etree as et
 #from uws import Job
 import requests
@@ -7,7 +7,14 @@ import uws
 from ensure import ensure
 from purl import URL
 
-# basic http support, copied from behave-http, but use my own custom append-function
+# for parsing dates:
+from datetime import datetime
+import dateutil.parser
+import pytz
+
+
+# basic http support, mainly copied from behave-http,
+# https://github.com/mikek/behave-http/, BSD 2-Clause License
 @given('I am using server "{server}"')
 def using_server(context, server):
     context.server = URL(server)
@@ -76,18 +83,14 @@ def check_header_inline(context, var, value):
 ## end of part from behave-http
 
 ## Own steps
-@then('the response status should not be {status}')
-def response_status(context, status):
-    ensure(context.response.status_code).is_not(int(status))
 
 @given('I set BasicAuth username and password to user-defined values')
 def set_basic_auth_headers(context):
     context.auth = (context.username, context.password)
 
-@then('the "{var}" header should contain "{value}"')
-def step_impl(context, var, value):
-    header = context.response.headers[var].encode('ascii')
-    ensure(value).is_in(header)
+@given('I set base URL to user-defined value')
+def set_base_url(context):
+    context.server = context.server.add_path_segment(context.base_url)
 
 @when('I make a GET request to base URL')
 def step_impl(context):
@@ -99,6 +102,14 @@ def step_impl(context):
     )
 
 # general things, for UWS
+@when('I make a GET request to URL "{url}"')
+def step_impl(context, url):
+    context.response = requests.get(
+        url,
+        headers=context.headers,
+        auth=context.auth
+    )
+
 @then('the attribute "{attribute}" should be "{value}"')
 def step_impl(context, attribute, value):
     parsed = et.fromstring(str(context.response.text))
@@ -109,7 +120,7 @@ def step_impl(context, attribute, value):
 def step_impl(context, element):
     parsed = et.fromstring(str(context.response.text))
     #raise NotImplementedError("%r" % parsed)
-    foundvalue = parsed.find(get_UWSName(element), namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).is_not_none()
 
 @then('the UWS root element is "{root}"')
@@ -117,20 +128,20 @@ def step_impl(context, root):
     parsed = et.fromstring(str(context.response.text))
     foundroot = parsed.tag
     #raise NotImplementedError("%r" % foundroot)
-    ensure(foundroot).equals(get_UWSName(root))
+    ensure(foundroot).equals(get_UwsName(root))
 
 @then('the UWS element "{element}" should be one of "{values}"')
 def step_impl(context, element, values):
     #raise NotImplementedError('%r' %  context.response.text)
     parsed = et.fromstring(str(context.response.text))
-    foundvalue = parsed.find(get_UWSName(element), namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).is_in([value.strip() for value in values.split(',')])
 
 @then('the UWS element "{element}" should be "{value}"')
 def step_impl(context, element, value):
     #raise NotImplementedError('%r' %  context.response.text)
     parsed = et.fromstring(str(context.response.text))
-    foundvalue = parsed.find(get_UWSName(element), namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).equals(value)
 
 @then('all UWS elements "{element}" should be one of "{values}"')
@@ -138,7 +149,7 @@ def step_impl(context, element, values):
     values = [value.strip() for value in values.split(',')]
     parsed = et.fromstring(str(context.response.text))
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(get_UWSName(element)), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
     #raise NotImplementedError('%r, %r' % (elementlist, uwselement))
     for elem in elementlist:
         ensure(elem.text).is_in(values)
@@ -148,7 +159,7 @@ def step_impl(context, element, values):
 def step_impl(context, element, value):
     parsed = et.fromstring(str(context.response.text))
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(get_UWSName(element)), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
     for elem in elementlist:
         ensure(elem.text).equals(value)
 
@@ -156,8 +167,49 @@ def step_impl(context, element, value):
 # TODO: this also validates as True, if there is no job at all
 def step_impl(context, element, last):
     parsed = et.fromstring(str(context.response.text))
-    count = len(parsed.findall(get_UWSName(element), namespaces=parsed.nsmap))
+    count = len(parsed.findall(get_UwsName(element), namespaces=parsed.nsmap))
     ensure(count).is_less_than_or_equal_to(last)
+
+@then('the number of UWS elements "{element}" should be equal to 0')
+def step_impl(context, element):
+    parsed = et.fromstring(str(context.response.text))
+    count = len(parsed.findall(get_UwsName(element), namespaces=parsed.nsmap))
+    ensure(count).equals(0)
+
+@then('the UWS job startTime should be later than "{datetime}"')
+def step_impl(context, datetime):
+    parsed = et.fromstring(str(context.response.text))
+    startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
+    # convert startTime to UTC, in case it has a timezone attached:
+    date = dateutil.parser.parse(startTime)
+    if date.utcoffset() is not None:
+        utz = pytz.timezone('UTC')
+        date = date.astimezone(utz).replace(tzinfo=None)
+    date = date.isoformat()
+
+    ensure(date).is_greater_than_or_equal_to(datetime)
+
+
+@then('all UWS joblist startTimes should be later than "{datetime}"')
+def step_impl(context, datetime):
+    parsed = et.fromstring(str(context.response.text))
+    element = "jobref"
+    jobreflist = parsed.findall(get_UwsName(element), namespaces=parsed.nsmap)
+    for jobref in jobreflist:
+        #context.jobref = uws.JobRef()
+        #jobId = context.jobref.get_jobId()
+        jobId = jobref.get("id")
+        link = jobref.get(get_XlinkName("href"))
+        # Note: This is not necessarily a full link name, but could also be just the jobId! (e.g. CADC implementation)
+
+        # make a get request and compare the startTime
+        context.execute_steps(u'''
+            When I make a GET request to URL "{url}"
+            Then the UWS job startTime should be later than "{datetime}"
+            '''.format(url=link, datetime=datetime)
+        )
+
+
 
 
 

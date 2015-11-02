@@ -2,10 +2,11 @@
 from purl import URL
 
 def before_all(context):
-	userdata = context.config.userdata
-	context.server = URL(userdata.get("server","someserver"))
-	context.username = userdata.get("username","testuser")
-	context.password = userdata.get("password","testpassword")
+    userdata = context.config.userdata
+    context.server = URL(userdata.get("server","someserver"))
+    context.base_url = userdata.get("base_url","somebaseurl")
+    context.username = userdata.get("username","")
+    context.password = userdata.get("password","")
 
 def before_scenario(context, scenario):
     # clear context.headers
