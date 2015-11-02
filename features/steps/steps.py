@@ -110,6 +110,10 @@ def step_impl(context, url):
         auth=context.auth
     )
 
+@then('the response status should not be {status}')
+def response_not_status(context, status):
+    ensure(context.response.status_code).is_not(int(status))
+
 @then('the attribute "{attribute}" should be "{value}"')
 def step_impl(context, attribute, value):
     parsed = et.fromstring(str(context.response.text))

@@ -129,6 +129,7 @@ Feature: Job list filters
       | PENDING    | 10       |
       | QUEUED     | 10       |
 
+  @slow
   @uws1_1
   Scenario Outline: AFTER filter
     When I make a GET request to "?AFTER=<datetime>"
@@ -154,6 +155,7 @@ Feature: Job list filters
       | sometext               |
       | 2015-10-26T09:00+01:00 |
 
+  @slow
   @uws1_1
   Scenario Outline: Combination of PHASE and AFTER filter
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
@@ -166,6 +168,7 @@ Feature: Job list filters
       | ERROR      | 2015-10-26T09:00 |
       | ABORTED    | 2015-10-26T09:00 |
 
+  @slow
   @uws1_1
   Scenario Outline: Combination of PHASE and AFTER filter for jobs with no startTimes
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
@@ -178,6 +181,7 @@ Feature: Job list filters
       | PENDING    | 2015-10-26T09:00 |
       | QUEUED     | 2015-10-26T09:00 |
 
+  @slow
   @uws1_1
   Scenario Outline: Combination of LAST and AFTER filter
     When I make a GET request to "?LAST=<last>&AFTER=<datetime>"
