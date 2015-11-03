@@ -5,6 +5,7 @@ class Job(object):
     def __init__(self):
         self.jobId = None
         self.phase = None
+        self.startTime = None
 
     def set_jobId(self, id):
         self.jobId = id
@@ -25,6 +26,12 @@ class Jobref(object):
         self.href = None
         self.phase = None
 
+    def set_jobId(self, id):
+        self.jobId = id
+
     def get_jobId(self):
-        pass
-#        return id
+        return self.jobId
+
+    def get_phase(self):
+        return self.phase
+

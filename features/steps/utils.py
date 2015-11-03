@@ -21,3 +21,9 @@ def get_XlinkName(element):
     xlink_namespace = "http://www.w3.org/1999/xlink"
     xlinkelement = et.QName(xlink_namespace, element)
     return xlinkelement
+
+def get_dict_from_paramtable(table):
+    dictionary = {}
+    for row in table:
+        dictionary[ row[0] ] = row[1]
+    return dictionary

@@ -6,59 +6,38 @@ Feature: Job
     Given I set base URL to user-defined value
     And I set BasicAuth username and password to user-defined values
 
-#  Scenario: Test POST request
-#    When I make a POST request to "/"
-#    """
-#    {"query": "SELECT * FROM MDR1.FOF LIMIT 10"}
-#    """
-#    Then the response status should be 200
-#    And the response body should contain
-#    """
-#    <?xml version=\"1.0\" ?>
-#    <uws:job version=\"1.1\" xmlns:uws=\"http://www.ivoa.net/xml/UWS/v1.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
-#        <uws:jobId>1445945379095063623</uws:jobId>
-#        <uws:ownerId>uwstest</uws:ownerId>
-#        <uws:phase>PENDING</uws:phase>
-#        <uws:quote xsi:nil=\"true\"/>
-#        <uws:startTime xsi:nil=\"true\"/>
-#        <uws:endTime xsi:nil=\"true\"/>
-#        <uws:executionDuration>0</uws:executionDuration>
-#        <uws:destruction xsi:nil=\"true\"/>
-#        <uws:parameters>
-#            <uws:parameter id=\"query\">SELECT * FROM MDR1.FOF LIMIT 10</uws:parameter>
-#        </uws:parameters>
-#        <uws:results/>
-#    </uws:job>
-#    """
-
-  Scenario: Check a pending job
-    Given I set "Accept" header to "application/xml"
-    When I make a GET request to "1445429492409191723"
-    Then the response status should be 200
-    And the "Content-Type" header should contain "application/xml"
+  Scenario: Create and remove pending job
+    When I create a user-defined short job
+    Then the response status should be "200"
     And the attribute "version" should be "1.1"
-    And the UWS element "ownerId" should be "tuser"
+    # And the "Content-Type" header should contain "application/xml"
     And the UWS element "phase" should be "PENDING"
-    And the UWS element "phase" should exist
-    And the UWS element "phase" should be one of "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, ARCHIVED, HELD, SUSPENDED, UNKNOWN"
-    # And the parameter "startTime" should be "Null"
 
-  Scenario: Ensure correct phase
-    When I make a GET request to "1445429492409191723/phase"
-    Then the response status should be 200
-    And the response body should contain "PENDING"
+    When I delete the same job
+    Then the response status should be "200"
+    #TODO: And the job list should be returned
 
-#  Scenario: Create and check pending job
-#    When I create a new job with
-#    #When I make a POST request to "/" with
-#        | qkey   | qvalue      |
-#        | query  | SELECT * FROM MDR1.FOF LIMIT 10 |
-#    
-#    And GET the job afterwards
-#    #And I make a GET request to "{jobId}/phase".format(jobId=context.job.get_jobId()))
-#    Then the response status should be 200
-#    And the response body should contain "PENDING"
-#    #And the element "phase" should be "PENDING"
-#    # Now I should remove the job!!
+    When I get the job details of the same job
+    Then the response should either be status "404" or the job has phase "ARCHIVED"
+
+  @test
+  Scenario: Create and abort pending job
+    When I create a user-defined short job
+    And I send PHASE="ABORT" to the phase of the same job
+    Then the response status should be "200"
+
+    When I get the job details of the same job
+    Then the response status should be "200"
+    And the UWS element "phase" should be "ABORTED"
+    And the UWS element "endTime" should exist
+
+    # delete job afterwards --> should store jobIds somewhere and then clean up later on, if after_all
+    When I delete the same job
+    Then the response status should be "200"
+
+  Scenario: Create and start pending job
+
+
+  Scenario: Create and start pending job in one step
 
 # TODO: continue with WAIT parameter for PENDING job

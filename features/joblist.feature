@@ -10,7 +10,7 @@ Feature: Job list filters
   Scenario: Get the (complete) job list
     # Note: not sure yet how to handle it of a redirect is returned!
     When I make a GET request to base URL
-    Then the response status should be 200
+    Then the response status should be "200"
     And the "Content-Type" header should contain "application/xml"
     And the attribute "version" should be "1.1"
     And the UWS root element is "jobs"
@@ -25,7 +25,7 @@ Feature: Job list filters
   @uws1_1
   Scenario Outline: PHASE filter
     When I make a GET request to "?PHASE=<phase>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And all UWS elements "phase" should be "<phase>"
 
     Examples: Valid phases
@@ -44,7 +44,7 @@ Feature: Job list filters
   @daiquiri
   Scenario Outline: PHASE filter with invalid phase
     When I make a GET request to "?PHASE=<phase>"
-    Then the response status should not be 200
+    Then the response status should not be "200"
     
     Examples: Invalid phases
       | phase        |
@@ -56,7 +56,7 @@ Feature: Job list filters
   @uws1_1
   Scenario Outline: Two PHASE filters
     When I make a GET request to "?PHASE=<phase1>&PHASE=<phase2>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And all UWS elements "phase" should be one of "<phase1>, <phase2>"
 
     Examples: Phase combinations (selection)
@@ -69,7 +69,7 @@ Feature: Job list filters
   @uws1_1
   Scenario Outline: Three PHASE filters
     When I make a GET request to "?PHASE=<phase1>&PHASE=<phase2>&PHASE=<phase3>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And all UWS elements "phase" should be one of "<phase1>, <phase2>, <phase3>"
 
     Examples: Phase combinations (selection)
@@ -78,13 +78,13 @@ Feature: Job list filters
       | EXECUTING | COMPLETED | ARCHIVED  |
       | COMPLETED | ERROR     | ABORTED   |
 
+  @slow
   @uws1_1
   Scenario Outline: LAST filter
     When I make a GET request to "?LAST=<last>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And the number of UWS elements "jobref" should be less than or equal to "<last>"
-    # TODO: And the list should be sorted by startTime
-    # TODO: And the list should be sorted in ascending order
+    And the UWS joblist should be sorted by startTime in ascending order
 
     Examples: Valid numbers for LAST
       | last |
@@ -96,7 +96,7 @@ Feature: Job list filters
   @daiquiri
   Scenario Outline: LAST filter with invalid values
     When I make a GET request to "?LAST=<last>"
-    Then the response status should not be 200
+    Then the response status should not be "200"
     # which one should it be, exactly? one of "400, 403, 404, 405"?
 
     Examples: Invalid numbers for LAST
@@ -105,11 +105,13 @@ Feature: Job list filters
       | -254     |
       | sometext |
 
+  @slow
   @uws1_1
   Scenario Outline: Combination of PHASE and LAST filter
     When I make a GET request to "?PHASE=<phase>&LAST=<last>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And the number of UWS elements "jobref" should be less than or equal to "<last>"
+    And the UWS joblist should be sorted by startTime in ascending order
 
     Examples: PHASE and LAST values
       | phase      | last     |
@@ -117,12 +119,14 @@ Feature: Job list filters
       | ERROR      | 5        |
       | ABORTED    | 5        |
 
+  @slow
   @uws1_1
   Scenario Outline: Combination of PHASE and LAST filter for jobs with no startTimes
     # jobs in QUEUED/PENDING phase have no startTime, thus should be ignored
     When I make a GET request to "?PHASE=<phase>&LAST=<last>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And the number of UWS elements "jobref" should be equal to 0
+    And the UWS joblist should be sorted by startTime in ascending order
 
     Examples: PHASE and LAST values for jobs with no startTime
       | phase      | last     |
@@ -133,7 +137,7 @@ Feature: Job list filters
   @uws1_1
   Scenario Outline: AFTER filter
     When I make a GET request to "?AFTER=<datetime>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And all UWS joblist startTimes should be later than "<datetime>"
     
     Examples: Valid AFTER values
@@ -146,8 +150,8 @@ Feature: Job list filters
   @daiquiri
   Scenario Outline: AFTER filter with invalid values
     When I make a GET request to "?AFTER=<datetime>"
-    Then the response status should not be 200
-    
+    Then the response status should not be "200"
+
     Examples: Invalid AFTER values
       | datetime               |
       | 2015-10-26T09          |
@@ -159,7 +163,7 @@ Feature: Job list filters
   @uws1_1
   Scenario Outline: Combination of PHASE and AFTER filter
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And all UWS joblist startTimes should be later than "<datetime>"
 
     Examples: PHASE and AFTER values
@@ -172,7 +176,7 @@ Feature: Job list filters
   @uws1_1
   Scenario Outline: Combination of PHASE and AFTER filter for jobs with no startTimes
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And the number of UWS elements "jobref" should be equal to 0
     And all UWS joblist startTimes should be later than "<datetime>"
 
@@ -185,11 +189,12 @@ Feature: Job list filters
   @uws1_1
   Scenario Outline: Combination of LAST and AFTER filter
     When I make a GET request to "?LAST=<last>&AFTER=<datetime>"
-    Then the response status should be 200
+    Then the response status should be "200"
     And the number of UWS elements "jobref" should be less than or equal to "<last>"
     And all UWS joblist startTimes should be later than "<datetime>"
+    And the UWS joblist should be sorted by startTime in ascending order
 
-    Examples: PHASE and LAST values
+    Examples: AFTER and LAST values
       | datetime         | last     |
       | 2015-10-26T09:00 | 5        |
       | 2015-10-26T09:00 | 3        |

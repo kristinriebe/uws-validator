@@ -7,6 +7,8 @@ def before_all(context):
     context.base_url = userdata.get("base_url","somebaseurl")
     context.username = userdata.get("username","")
     context.password = userdata.get("password","")
+    context.shortjob_parameters = userdata.get("shortjob_parameters","")
+    context.longjob_parameters = userdata.get("longjob_parameters","")
 
 def before_scenario(context, scenario):
     # clear context.headers

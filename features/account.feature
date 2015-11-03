@@ -8,4 +8,4 @@ Feature: User Account
 
   Scenario: Ensure user can access UWS endpoint
     When I make a GET request to base URL
-    Then the response status should be 200
+    Then the response status should be "200"
