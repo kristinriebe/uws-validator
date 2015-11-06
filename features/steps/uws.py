@@ -1,3 +1,4 @@
+# These classes are not yet really used. Maybe remove them again.
 class Job(object):
     """
     Class for a UWS job with all its elements and attributes

@@ -1,26 +1,52 @@
+# This feature tests
+# 1) if a job list is returned properly
+# 2) if the new UWS1.1 phase filters are applied correctly
+# The testing is done passively, i.e. no new jobs are created,
+# just the ones that can be retrieved can be filtered.
+# This is not as elaborate as it could be, but is a good starting point for
+# testing if the user cannot create new jobs.
+
 Feature: Job list filters
   As a client
-  I want to retrieve a (filtered) UWS jobs list
+  I want to retrieve a (filtered) list of UWS jobs
 
   Background: Set server name, headers and user account
     Given I set base URL to user-defined value
     And I set "Accept" header to "application/xml"
     And I set BasicAuth username and password to user-defined values
 
-  Scenario: Get the (complete) job list
-    # Note: not sure yet how to handle it of a redirect is returned!
+  @basics
+  Scenario: Get the (complete) job list (possibly with 0 elements!)
+    # Note: not sure yet how to handle it if a redirect is returned!
     When I make a GET request to base URL
     Then the response status should be "200"
     And the "Content-Type" header should contain "application/xml"
-    And the attribute "version" should be "1.1"
-    And the UWS root element is "jobs"
-    # TODO: And the UWS element "jobs" contains "jobref" elements
-    # TODO: And each UWS element "jobref" contains an UWS element "id"
-    # TODO: And each UWS element "jobref" contains an UWS element "href"
-    # TODO: And each UWS element "jobref" contains an UWS element "phase"
+    And the UWS root element should be "jobs"
+
+  Scenario: Get the (complete) job list
+    # Note: not sure yet how to handle it if a redirect is returned!
+    When I make a GET request to base URL
+    Then the response status should be "200"
+    And the "Content-Type" header should contain "application/xml"
+    And the UWS root element should be "jobs"
+
+  Scenario: Create jobs and get the job list
+    When I create a user-defined immediate job
+    And I create and start a user-defined immediate job
+    And I make a GET request to base URL
+    Then the response status should be "200"
+    And the UWS root element should be "jobs"
+    And the UWS root element should contain UWS elements "jobref"
+    # TODO: And each UWS element "jobref" should contain an UWS element "id"
+    # TODO: And each UWS element "jobref" should contain an UWS element "href"
+    # TODO: And each UWS element "jobref" should contain an UWS element "phase"
     And all UWS elements "phase" should be one of "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, ARCHIVED, HELD, SUSPENDED, UNKNOWN"
-    #valid UWS phases
-    # "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, ARCHIVED, HELD, SUSPENDED, UNKNOWN"
+
+  @uws1_1
+  @version
+  Scenario: Get the (complete) job list for UWS 1.1
+    When I make a GET request to base URL
+    Then the attribute "version" should be "1.1"
 
   @uws1_1
   Scenario Outline: PHASE filter
@@ -41,7 +67,7 @@ Feature: Job list filters
       | SUSPENDED |
       | UNKNOWN   |
 
-  @daiquiri
+  @invalid
   Scenario Outline: PHASE filter with invalid phase
     When I make a GET request to "?PHASE=<phase>"
     Then the response status should not be "200"
@@ -93,7 +119,7 @@ Feature: Job list filters
       | 254  |
       | 3423 |
 
-  @daiquiri
+  @invalid
   Scenario Outline: LAST filter with invalid values
     When I make a GET request to "?LAST=<last>"
     Then the response status should not be "200"
@@ -147,7 +173,7 @@ Feature: Job list filters
       | 2015-10-26          |
       | 2015                |
 
-  @daiquiri
+  @invalid
   Scenario Outline: AFTER filter with invalid values
     When I make a GET request to "?AFTER=<datetime>"
     Then the response status should not be "200"
@@ -200,11 +226,9 @@ Feature: Job list filters
       | 2015-10-26T09:00 | 3        |
       | 2015-10-26T09:00 | 2        |
 
-
 # NOTE: could also add testing for reverse order, e.g. first LAST, then PHASE-filter etc.
 #       But standard does not require this explicitely, so skip it.
-# NOTE: also check combinations with invalid last/date/phase values?
-# NOTE: Do we really need to check invalid values? What if the server just decides to ignore them?
+# NOTE: Check invalid values? What if the server just decides to ignore them?
 #       This would be totally acceptable behaviour and is not forbidden by the standard
-# NOTE: the behaviour for requests with more than one LAST filter or more than
-# one AFTER filter are not defined, so won't be tested.
+# NOTE: The behaviour for requests with more than one LAST filter or more than
+#       one AFTER filter are not defined by the standard, so won't be tested.

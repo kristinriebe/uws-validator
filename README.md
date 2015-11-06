@@ -23,11 +23,11 @@ For UWS services without authentication, you can omit the username and password 
 
 Provide one or more <feature_file>'s on the command line to run the validator only for these features. This is recommended, if you want to run only a subset if the tests.
 
-If you want full testing, you also need to specify the parameters for a short-running job, e.g. like this:
+If you want full testing, you also need to specify the parameters for a few jobs, e.g. like this:
 
-    behave [...] -D shortjob_parameters='{"query": "SELECT * FROM MDR1.Redshifts", "queue": "short"}'
+    behave [...] -D job_parameters={"short": {"query": "SELECT * FROM MDR1.Redshifts", "queue": "short"}
 
-You can also setup a `behave.ini` file that includes all these settings, e.g. like this:
+You can also setup a `behave.ini` file that includes all the settings, e.g. like this:
 
 ```
 [behave]
@@ -36,11 +36,47 @@ server = your_servername
 base_url = your_baseurl
 username = your_username
 password = your_password
-shortjob_parameters = {"query": "SELECT x, y, z FROM MDR1.FOF LIMIT 10", "queue": "short"}
-longjob_parameters = {"query": "SELECT SLEEP(1000)", "queue": "long"}
+job_parameters = {"immediate": {"query": "SELECT x, y, z FROM MDR1.FOF LIMIT 10", "queue": "short"},
+                    "short" = {"query": "SELECT SLEEP(10)", "queue": "long"},
+                    "long" = {"query": "SELECT SLEEP(1000)", "queue": "long"},
+                    "error" = {"query": "SELECT something to create an error"}
+                }
 ```
 
 Then, if you omit the -D arguments, the defaults from this configuration file will be used. If you use both, configuration file and command line arguments, then the command line arguments overwrite the defaults.
+
+For more advanced uses, e.g. when testing a number of services, you can also define json configuration files. They should look similar to this:
+
+```
+{
+    "server": "your_servername",
+    "base_url": "your_baseurl",
+    "username": "your_username",
+    "password": "your_password",
+    "job_parameters": {
+        "immediate": {
+            "query": "SELECT x, y, z FROM MDR1.FOF LIMIT 10"
+        },
+        "short": {
+            "query": "SELECT SLEEP(10)"
+        },
+        "long": {
+            "query": "SELECT SLEEP(1000)",
+            "queue": "long"
+         },
+        "error": {
+            "query": "SELECT something to create an error",
+        }
+    }
+}
+```
+
+The file will be read by behave, if you provide it as the configfile:
+
+    behave [...] -D config_file=<file>.json
+
+where `<file>` needs to be replaced by your chosen filename.
+
 
 ### Using only a selection of tests
 Each feature is stored in one feature file. If you only want to test one feature, then call behave with the name of the feature file, e.g.
@@ -54,9 +90,9 @@ Each feature is stored in one feature file. If you only want to test one feature
 Use `--tags=-<tagname>` for excluding scenarios with the given tag name.
 
 The tags used here are (have a look inside the feature-files!):
-    * `uws1_1`: tag for the features/scenarios that belong exclusively to UWS 1.1 standard
-    * `daiquiri`: tag for scenarios that are expected from the Daiquiri-implementation of UWS 1.1, but are not strictly required by the standard (e.g. behaviour if invalid filter values are given)
-    * `slow`: tag for scenarios that are expected to be slow because they make a number of requests to the server (one for each job in the job list)
+    * `uws1_1`: tag for the features/scenarios that belong exclusively to UWS 1.1 standard  
+    * `daiquiri`: tag for scenarios that are expected from the Daiquiri-implementation of UWS 1.1, but are not strictly required by the standard (e.g. behaviour if invalid filter values are given)  
+    * `slow`: tag for scenarios that are expected to be slow because they make a number of requests to the server (one for each job in the job list)  
 
 Also see https://pythonhosted.org/behave/tutorial.html#controlling-things-with-tags for more information on tags and their syntax in behave.
 
