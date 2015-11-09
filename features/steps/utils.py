@@ -34,7 +34,7 @@ def delete_job(context, jobId):
     url = append_path(context.server, jobId)
 
     # check phase of job that shall be deleted;
-    # if still executing, abort it first
+    # if still executing, abort it first (needed at least for Daiquiri implementation)
     response = requests.get(
             append_path(context.server, jobId+'/phase'),
             headers=context.headers,
@@ -59,3 +59,19 @@ def delete_job(context, jobId):
         raise
     if response.status_code != 200:
         print ("Job deletion was not successful: %s, %s" % (jobId, response.text))
+
+
+def get_absolutelink(context, link):
+    # Check, if the link is absolute,
+    # if not: prepend the server name and base url.
+    # This is needed, because some services (DaCHS, UWS library, Daiquiri, TAO)
+    # return the full path as href-element in UWS xml response for a job,
+    # but others (CADC) just return a relative link (the jobId)
+
+    if "://" not in link:
+        # this is a relative path
+        base = append_path(context.server, context.base_url)
+        link = append_path(base, link)
+
+    return link
+    

@@ -7,40 +7,40 @@
 # testing if the user cannot create new jobs.
 
 Feature: Job list filters
+  In order to retrieve a subset of UWS jobs from a UWS service
   As a client
-  I want to retrieve a (filtered) list of UWS jobs
+  I apply different filters to the UWS job list
 
   Background: Set server name, headers and user account
     Given I set base URL to user-defined value
-    And I set "Accept" header to "application/xml"
-    And I set BasicAuth username and password to user-defined values
+      And I set "Accept" header to "application/xml"
+      And I set BasicAuth username and password to user-defined values
 
   @basics
-  Scenario: Get the (complete) job list (possibly with 0 elements!)
-    # Note: not sure yet how to handle it if a redirect is returned!
-    When I make a GET request to base URL
-    Then the response status should be "200"
-    And the "Content-Type" header should contain "application/xml"
-    And the UWS root element should be "jobs"
-
   Scenario: Get the (complete) job list
     # Note: not sure yet how to handle it if a redirect is returned!
     When I make a GET request to base URL
     Then the response status should be "200"
-    And the "Content-Type" header should contain "application/xml"
-    And the UWS root element should be "jobs"
+     And the "Content-Type" header should contain "application/xml"
+     And the UWS root element should be "jobs"
 
+  @basics
   Scenario: Create jobs and get the job list
-    When I create a user-defined immediate job
-    And I create and start a user-defined immediate job
-    And I make a GET request to base URL
+    When I create a user-defined "immediate" job
+     And I create and start a user-defined "immediate" job
+     And I create a user-defined "immediate" job
+     And I send PHASE="ABORT" to the phase of the same job
+     And I create a user-defined "error" job
+     And I create a user-defined "long" job
+     And I make a GET request to base URL
     Then the response status should be "200"
-    And the UWS root element should be "jobs"
-    And the UWS root element should contain UWS elements "jobref"
+     And the UWS root element should be "jobs"
+     And the UWS root element should contain UWS elements "jobref"
     # TODO: And each UWS element "jobref" should contain an UWS element "id"
     # TODO: And each UWS element "jobref" should contain an UWS element "href"
     # TODO: And each UWS element "jobref" should contain an UWS element "phase"
-    And all UWS elements "phase" should be one of "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, ARCHIVED, HELD, SUSPENDED, UNKNOWN"
+     And all UWS elements "phase" should be one of "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, HELD, SUSPENDED, UNKNOWN"
+     # and phase should never be ARCHIVED, unless explicitely asked for!
 
   @uws1_1
   @version
@@ -52,7 +52,7 @@ Feature: Job list filters
   Scenario Outline: PHASE filter
     When I make a GET request to "?PHASE=<phase>"
     Then the response status should be "200"
-    And all UWS elements "phase" should be "<phase>"
+     And all UWS elements "phase" should be "<phase>"
 
     Examples: Valid phases
       | phase     |
@@ -83,7 +83,7 @@ Feature: Job list filters
   Scenario Outline: Two PHASE filters
     When I make a GET request to "?PHASE=<phase1>&PHASE=<phase2>"
     Then the response status should be "200"
-    And all UWS elements "phase" should be one of "<phase1>, <phase2>"
+     And all UWS elements "phase" should be one of "<phase1>, <phase2>"
 
     Examples: Phase combinations (selection)
       | phase1    | phase2    |
@@ -96,7 +96,7 @@ Feature: Job list filters
   Scenario Outline: Three PHASE filters
     When I make a GET request to "?PHASE=<phase1>&PHASE=<phase2>&PHASE=<phase3>"
     Then the response status should be "200"
-    And all UWS elements "phase" should be one of "<phase1>, <phase2>, <phase3>"
+     And all UWS elements "phase" should be one of "<phase1>, <phase2>, <phase3>"
 
     Examples: Phase combinations (selection)
       | phase1    | phase2    | phase3    |
@@ -109,8 +109,8 @@ Feature: Job list filters
   Scenario Outline: LAST filter
     When I make a GET request to "?LAST=<last>"
     Then the response status should be "200"
-    And the number of UWS elements "jobref" should be less than or equal to "<last>"
-    And the UWS joblist should be sorted by startTime in ascending order
+     And the number of UWS elements "jobref" should be less than or equal to "<last>"
+     And the UWS joblist should be sorted by startTime in ascending order
 
     Examples: Valid numbers for LAST
       | last |
@@ -136,8 +136,8 @@ Feature: Job list filters
   Scenario Outline: Combination of PHASE and LAST filter
     When I make a GET request to "?PHASE=<phase>&LAST=<last>"
     Then the response status should be "200"
-    And the number of UWS elements "jobref" should be less than or equal to "<last>"
-    And the UWS joblist should be sorted by startTime in ascending order
+     And the number of UWS elements "jobref" should be less than or equal to "<last>"
+     And the UWS joblist should be sorted by startTime in ascending order
 
     Examples: PHASE and LAST values
       | phase      | last     |
@@ -151,8 +151,8 @@ Feature: Job list filters
     # jobs in QUEUED/PENDING phase have no startTime, thus should be ignored
     When I make a GET request to "?PHASE=<phase>&LAST=<last>"
     Then the response status should be "200"
-    And the number of UWS elements "jobref" should be equal to 0
-    And the UWS joblist should be sorted by startTime in ascending order
+     And the number of UWS elements "jobref" should be "0"
+     And the UWS joblist should be sorted by startTime in ascending order
 
     Examples: PHASE and LAST values for jobs with no startTime
       | phase      | last     |
@@ -161,10 +161,13 @@ Feature: Job list filters
 
   @slow
   @uws1_1
-  Scenario Outline: AFTER filter
-    When I make a GET request to "?AFTER=<datetime>"
+  Scenario Outline: AFTER filter with different valid date formats
+    When I send PHASE="ABORT" to the phase of the same job
+     And I create a user-defined "error" job
+     And I create a user-defined "long" job
+     And I make a GET request to "?AFTER=<datetime>"
     Then the response status should be "200"
-    And all UWS joblist startTimes should be later than "<datetime>"
+     And all UWS joblist startTimes should be later than "<datetime>"
     
     Examples: Valid AFTER values
       | datetime            |
@@ -185,12 +188,24 @@ Feature: Job list filters
       | sometext               |
       | 2015-10-26T09:00+01:00 |
 
+  @test
+  @slow
+  @uws1_1
+  Scenario: AFTER filter using startTime from job list
+    When I make a GET request to base URL
+     And I pick a startTime from the job list
+     And I apply the AFTER filter with the stored startTime
+    Then the response status should be "200"
+     And the number of UWS elements "jobref" should be greater than or equal to "1"
+#     And the number of UWS elements "jobref" should be less than the total number of jobs
+     And all UWS joblist startTimes should be later than the stored startTime
+
   @slow
   @uws1_1
   Scenario Outline: Combination of PHASE and AFTER filter
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
     Then the response status should be "200"
-    And all UWS joblist startTimes should be later than "<datetime>"
+     And all UWS joblist startTimes should be later than "<datetime>"
 
     Examples: PHASE and AFTER values
       | phase      | datetime         |
@@ -203,8 +218,8 @@ Feature: Job list filters
   Scenario Outline: Combination of PHASE and AFTER filter for jobs with no startTimes
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
     Then the response status should be "200"
-    And the number of UWS elements "jobref" should be equal to 0
-    And all UWS joblist startTimes should be later than "<datetime>"
+     And the number of UWS elements "jobref" should be equal to 0
+     And all UWS joblist startTimes should be later than "<datetime>"
 
     Examples: PHASE and AFTER values for jobs with no startTime
       | phase      | datetime         |
@@ -216,9 +231,9 @@ Feature: Job list filters
   Scenario Outline: Combination of LAST and AFTER filter
     When I make a GET request to "?LAST=<last>&AFTER=<datetime>"
     Then the response status should be "200"
-    And the number of UWS elements "jobref" should be less than or equal to "<last>"
-    And all UWS joblist startTimes should be later than "<datetime>"
-    And the UWS joblist should be sorted by startTime in ascending order
+     And the number of UWS elements "jobref" should be less than or equal to "<last>"
+     And all UWS joblist startTimes should be later than "<datetime>"
+     And the UWS joblist should be sorted by startTime in ascending order
 
     Examples: AFTER and LAST values
       | datetime         | last     |

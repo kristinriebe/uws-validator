@@ -50,19 +50,15 @@ def after_scenario(context, scenario):
     # If there were any jobs created, then delete them now.
     # Ids of created jobs are stored in array context.created_jobs
 
-    # print("created_jobs: %r" % (context.created_jobs))
-
     if context.created_jobs:
         jobs = list(context.created_jobs)
         for jobId in jobs:
-            # print("delete job %r" % (jobId))
             delete_job(context, jobId)
-            # problem: if the job is still running, then this will not delete, but abort the job!
-            # Is this the correct expected behaviour??
             context.removed_jobs.append(jobId)
             context.created_jobs.remove(jobId)
 
 def after_all(context):
+    print("Clean-up: removing the created test jobs")
     if len(context.removed_jobs) > 0:
         print("The removed jobIds are: %r" % context.removed_jobs)
     if len(context.created_jobs) > 0:

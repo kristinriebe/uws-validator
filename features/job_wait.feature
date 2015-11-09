@@ -9,7 +9,7 @@ Feature: Job
 
   @uws1_1
   Scenario: (Do not) Wait for job in inactive phase
-    When I create and start a user-defined immediate job
+    When I create and start a user-defined "immediate" job
     And I send PHASE="ABORT" to the phase of the same job
     And I use blocking with WAIT="100"
     Then the server should return immediately
@@ -17,14 +17,14 @@ Feature: Job
   @slow
   @uws1_1
   Scenario: Wait for job in active phase
-    When I create a user-defined immediate job
+    When I create a user-defined "immediate" job
     And I use blocking with WAIT="5"
     Then the request time should be at least the wait time
     And the request time should not be much longer than the wait time
 
   @uws1_1
   Scenario Outline: (Do not) Wait for job with specified inactive phase
-    When I create a user-defined immediate job
+    When I create a user-defined "immediate" job
     And I use advanced blocking with WAIT="5" and PHASE="<phase>"
     Then the server should return immediately
 
@@ -41,7 +41,7 @@ Feature: Job
   @slow
   @uws1_1
   Scenario Outline: Wait for job with specified active phase
-    When I create a user-defined immediate job
+    When I create a user-defined "immediate" job
     And I use advanced blocking with WAIT="5" and PHASE="<phase>"
     Then the request time should be at least the wait time
     And the request time should not be much longer than the wait time
@@ -53,7 +53,7 @@ Feature: Job
 
   @uws1_1
   Scenario Outline: (Do not) Wait for job with phase mismatch
-    When I create a user-defined immediate job
+    When I create a user-defined "immediate" job
     And I use advanced blocking with WAIT="5" and PHASE="<phase>"
     Then the server should return immediately
 
@@ -68,7 +68,7 @@ Feature: Job
   # This only works if there is some kind of job queue and if the job
   # runs less than 20 seconds, but more than ~ 2 seconds.
   Scenario: Wait for job phase change
-    When I create a user-defined short job
+    When I create a user-defined "short" job
     And I send PHASE="RUN" to the phase of the same job
     And I use advanced blocking with WAIT="20" and PHASE="QUEUED"
     And I use advanced blocking with WAIT="20" and PHASE="EXECUTING"
@@ -79,7 +79,7 @@ Feature: Job
   @veryslow
   @uws1_1
   Scenario: Wait forever
-    When I create a user-defined short job
+    When I create a user-defined "short" job
     And I use advanced blocking with WAIT="-1"
     Then the server should not return immediately
     # since we never start this job, the wait is only limited by the server timeout
@@ -88,5 +88,5 @@ Feature: Job
 # NOTE: Cannot test behaviour with queued/executing jobs, since I cannot control
 #       how long a job waits in queue or how long it runs
 
-# NOTE: Which behavious is expected, if the multiple phases are provided with WAIT?
+# NOTE: Which behaviour is expected, if multiple phases are provided with WAIT?
 #       I would say it's not allowed, so return with error?
