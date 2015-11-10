@@ -61,12 +61,18 @@ def delete_job(context, jobId):
         print ("Job deletion was not successful: %s, %s" % (jobId, response.text))
 
 
-def get_absolutelink(context, link):
+def get_absolutelink(context, link, refId):
     # Check, if the link is absolute,
     # if not: prepend the server name and base url.
+    # Also check, if link is None (it's an optional attribute),
+    # then use the refId instead.
+    #
     # This is needed, because some services (DaCHS, UWS library, Daiquiri, TAO)
     # return the full path as href-element in UWS xml response for a job,
-    # but others (CADC) just return a relative link (the jobId)
+    # but others (CADC) just return a relative link (the jobId).
+
+    if link is None:
+        link = refId
 
     if "://" not in link:
         # this is a relative path
@@ -74,4 +80,3 @@ def get_absolutelink(context, link):
         link = append_path(base, link)
 
     return link
-    

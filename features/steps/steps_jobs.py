@@ -91,6 +91,69 @@ def step_impl(context, phase):
         '''.format(jobId=jobId, phase=phase)
     )
 
+@when('I check the same job every "{timeinseconds}" seconds until it starts or is aborted/deleted')
+def step_impl(context, timeinseconds):
+    # This can be used if no WAIT-blocking is available
+    jobId = context.job.get_jobId()
+    url = append_path(context.server, jobId + "/phase")
+
+    phase = None
+    status_code = 200
+    pre_starting_phase = ["PENDING", "QUEUED", "HELD"]
+    while phase in pre_starting_phase and status_code == 200:
+        time.sleep(int(timeinseconds))
+
+        response = requests.get(
+            url,
+            headers=context.headers,
+            auth=context.auth
+        )
+        phase = response.text
+        status_code = response.status_code
+
+    if status_code != 200:
+        raise NotImplementedError("Got status_code %d while waiting for job execution." % (status_code))
+
+    # make one final request to get all the job details
+    url = append_path(context.server, jobId)
+    context.response = requests.get(
+        url,
+        headers=context.headers,
+        auth=context.auth
+    )
+
+
+@when('I check the same job every "{timeinseconds}" seconds until it is in a final state')
+def step_impl(context, timeinseconds):
+    # This can be used if no WAIT-blocking is available
+    jobId = context.job.get_jobId()
+    url = append_path(context.server, jobId + "/phase")
+
+    phase = None
+    status_code = 200
+    final_phases = ["ABORTED", "COMPLETED", "ERROR", "ARCHIVED"]
+    while phase not in final_phases and status_code == 200:
+        time.sleep(int(timeinseconds))
+
+        response = requests.get(
+            url,
+            headers=context.headers,
+            auth=context.auth
+        )
+        phase = response.text
+        status_code = response.status_code
+
+    if status_code != 200:
+        raise NotImplementedError("Got status_code %d while waiting for final state." % (status_code))
+
+    # make one final request to get all the job details
+    url = append_path(context.server, jobId)
+    context.response = requests.get(
+        url,
+        headers=context.headers,
+        auth=context.auth
+    )
+
 @given('I pick a job in inactive phase')
 def step_impl(context):
     context.execute_steps(u'''
@@ -221,8 +284,9 @@ def step_impl(context):
         startTime = None
         while startTime is None and i < len(elementlist):
             jobref = elementlist[-i] # use -i here, sicne I expect descending ordering, if any
+            refId = jobref.get("id")
             link = jobref.get(get_XlinkName("href"))
-            absolutelink = get_absolutelink(context, link)
+            absolutelink = get_absolutelink(context, link, refId)
             response = requests.get(
                 absolutelink,
                 headers=context.headers,

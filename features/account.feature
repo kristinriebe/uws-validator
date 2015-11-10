@@ -6,7 +6,7 @@ Feature: User Account
     Given I set base URL to user-defined value
     And I set BasicAuth username and password to user-defined values
 
-  @basic
+  @basics
   Scenario: Ensure user can access UWS endpoint
     When I make a GET request to base URL
     Then the response status should be "200"

@@ -21,24 +21,41 @@ Feature: Job list filters
     # Note: not sure yet how to handle it if a redirect is returned!
     When I make a GET request to base URL
     Then the response status should be "200"
-     And the "Content-Type" header should contain "application/xml"
+     And the "Content-Type" header should contain "xml"
      And the UWS root element should be "jobs"
 
-  @basics
-  Scenario: Create jobs and get the job list
-    When I create a user-defined "immediate" job
-     And I create and start a user-defined "immediate" job
-     And I create a user-defined "immediate" job
+  Scenario: Check structure of existing job list
+    # Use this scenario especially if no job creation possible
+    # NOTE: this will fail if there are no jobs available at all!
+    When I make a GET request to base URL
+    Then the response status should be "200"
+     And the UWS root element should be "jobs"
+     # Actually works only if the job list is not empty:
+     And the UWS root element should contain UWS elements "jobref"
+     And each UWS element "jobref" should have an attribute "id"
+    # TODO: And each UWS element "jobref"  should have an attribute  "xlink:href"
+    # --> the links are actually optional in the UWS schema!!!
+     And each UWS element "jobref" should have an element "phase"
+     And all UWS elements "phase" should be one of "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, HELD, SUSPENDED, UNKNOWN"
+     # and phase should never be ARCHIVED, unless explicitely asked for!
+
+  Scenario: Create jobs and then get the job list
+    # This is more useful than the previous scenario, but needs to create jobs,
+    # thus takes longer
+    When I create a user-defined "veryshort" job
+     And I create a user-defined "veryshort" job
+     And I send PHASE="RUN" to the phase of the same job
+     And I create a user-defined "veryshort" job
      And I send PHASE="ABORT" to the phase of the same job
      And I create a user-defined "error" job
-     And I create a user-defined "long" job
+     And I send PHASE="RUN" to the phase of the same job
      And I make a GET request to base URL
     Then the response status should be "200"
      And the UWS root element should be "jobs"
      And the UWS root element should contain UWS elements "jobref"
-    # TODO: And each UWS element "jobref" should contain an UWS element "id"
-    # TODO: And each UWS element "jobref" should contain an UWS element "href"
-    # TODO: And each UWS element "jobref" should contain an UWS element "phase"
+    # TODO: And each UWS element "jobref"  should have an attribute  "id" optional??
+    # TODO: And each UWS element "jobref"  should have an attribute  "xlink:href"
+    # TODO: And each UWS element "jobref"  should have an element "phase"
      And all UWS elements "phase" should be one of "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, HELD, SUSPENDED, UNKNOWN"
      # and phase should never be ARCHIVED, unless explicitely asked for!
 
@@ -68,6 +85,7 @@ Feature: Job list filters
       | UNKNOWN   |
 
   @invalid
+  @uws1_1
   Scenario Outline: PHASE filter with invalid phase
     When I make a GET request to "?PHASE=<phase>"
     Then the response status should not be "200"
@@ -120,6 +138,7 @@ Feature: Job list filters
       | 3423 |
 
   @invalid
+  @uws1_1
   Scenario Outline: LAST filter with invalid values
     When I make a GET request to "?LAST=<last>"
     Then the response status should not be "200"
@@ -162,10 +181,7 @@ Feature: Job list filters
   @slow
   @uws1_1
   Scenario Outline: AFTER filter with different valid date formats
-    When I send PHASE="ABORT" to the phase of the same job
-     And I create a user-defined "error" job
-     And I create a user-defined "long" job
-     And I make a GET request to "?AFTER=<datetime>"
+    When I make a GET request to "?AFTER=<datetime>"
     Then the response status should be "200"
      And all UWS joblist startTimes should be later than "<datetime>"
     
@@ -177,6 +193,7 @@ Feature: Job list filters
       | 2015                |
 
   @invalid
+  @uws1_1
   Scenario Outline: AFTER filter with invalid values
     When I make a GET request to "?AFTER=<datetime>"
     Then the response status should not be "200"
@@ -218,8 +235,7 @@ Feature: Job list filters
   Scenario Outline: Combination of PHASE and AFTER filter for jobs with no startTimes
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
     Then the response status should be "200"
-     And the number of UWS elements "jobref" should be equal to 0
-     And all UWS joblist startTimes should be later than "<datetime>"
+     And the number of UWS elements "jobref" should be "0"
 
     Examples: PHASE and AFTER values for jobs with no startTime
       | phase      | datetime         |

@@ -53,7 +53,7 @@ def after_scenario(context, scenario):
     if context.created_jobs:
         jobs = list(context.created_jobs)
         for jobId in jobs:
-            delete_job(context, jobId)
+            #delete_job(context, jobId)
             context.removed_jobs.append(jobId)
             context.created_jobs.remove(jobId)
 

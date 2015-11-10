@@ -23,12 +23,22 @@ def step_impl(context, attribute, value):
     attribute_value = parsed.get(attribute)
     ensure(attribute_value).equals(value)
 
+@then('each UWS element "{element}" should have an attribute "{attribute}"')
+def step_impl(context, element, attribute):
+    parsed = et.fromstring(str(context.response.text))
+    # get elements:
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
+    for elem in elementlist:
+        # check if attribute exists in list of attributes:
+        ensure(attribute).is_in(elem.attrib)
+        # ensure(elem.get(attribute)).is_not_none -- if to ensure that value is not None
+
 @then('the UWS element "{element}" should exist')
 def step_impl(context, element):
     parsed = et.fromstring(str(context.response.text))
     #raise NotImplementedError("%r" % parsed)
-    foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap)
-    ensure(foundvalue).is_not_none()
+    found = parsed.find(get_UwsName(element), namespaces=parsed.nsmap)
+    ensure(found).is_not_none()
 
 @then('the UWS element "{element}" should not be None')
 def step_impl(context, element):
@@ -54,19 +64,9 @@ def step_impl(context, element, values):
 
 @then('the UWS element "{element}" should be "{value}"')
 def step_impl(context, element, value):
-    #raise NotImplementedError('%r' %  context.response.text)
     parsed = et.fromstring(str(context.response.text))
     foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).equals(value)
-
-#@then('each UWS element "{element}" should contain an UWS element "{child}"')
-#def step_impl(context, element, child):
-#    parsed = et.fromstring(str(context.response.text))
-#    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
-#    for e in elementlist:
-#        subelement = e.find(get_UwsName(child), namespaces=parsed.nsmap)
-#        raise NotImplementedError(e, subelement)
-#        ensure(subelement).is_not_none
 
 @then('the UWS root element should contain UWS elements "{child}"')
 def step_impl(context, child):
@@ -74,6 +74,13 @@ def step_impl(context, child):
     for subelement in parsed.iterchildren():
         ensure(subelement.tag).equals(get_UwsName(child))
 
+@then('each UWS element "{element}" should have an element "{child}"')
+def step_impl(context, element, child):
+    parsed = et.fromstring(str(context.response.text))
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
+    for elem in elementlist:
+        subelement = elem.find(get_UwsName(child), namespaces=parsed.nsmap)
+        ensure(subelement).is_not_none
 
 @then('all UWS elements "{element}" should be one of "{values}"')
 def step_impl(context, element, values):
@@ -136,11 +143,9 @@ def step_impl(context, timestamp):
     element = "jobref"
     jobreflist = parsed.findall(get_UwsName(element), namespaces=parsed.nsmap)
     for jobref in jobreflist:
-        #context.jobref = uws.JobRef()
-        #jobId = context.jobref.get_jobId()
-        jobId = jobref.get("id")
+        refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
-        absolutelink = get_absolutelink(context, link)
+        absolutelink = get_absolutelink(context, link, refId)
         # Note: This is not necessarily a full link name, but could also be just the jobId! (e.g. CADC implementation)
 
         # make a get request and compare the startTime
@@ -165,9 +170,9 @@ def step_impl(context):
     jobreflist = parsed.findall(get_UwsName(element), namespaces=parsed.nsmap)
     timestamp = '0000-00-00T00:00:00'
     for jobref in jobreflist:
-        jobId = jobref.get("id")
+        refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
-        absolutelink = get_absolutelink(context, link)
+        absolutelink = get_absolutelink(context, link, refId)
 
         # make a get request and store the startTime
         context.execute_steps(u'''
