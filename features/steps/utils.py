@@ -6,10 +6,13 @@ import requests
 # from behave-http:
 def append_path(url, path):
     target = URL(path)
-    if target:
+    if target.path():
         url = url.add_path_segment(target.path())
     if target.query():
         url = url.query(target.query())
+
+    #raise NotImplementedError("target2: %r %r %r" % (target, target.query, url))
+
     return url.as_string()
 ## end
 
@@ -61,13 +64,13 @@ def delete_job(context, jobId):
         print ("Job deletion was not successful: %s, %s" % (jobId, response.text))
 
 
-def get_absolutelink(context, link, refId):
+def get_joblink(context, link, refId):
     # Check, if the link is absolute,
     # if not: prepend the server name and base url.
     # Also check, if link is None (it's an optional attribute),
-    # then use the refId instead.
+    # then use the refId for the job instead.
     #
-    # This is needed, because some services (DaCHS, UWS library, Daiquiri, TAO)
+    # This is needed, because most services (DaCHS, UWS library, Daiquiri, TAO)
     # return the full path as href-element in UWS xml response for a job,
     # but others (CADC) just return a relative link (the jobId).
 
@@ -76,7 +79,6 @@ def get_absolutelink(context, link, refId):
 
     if "://" not in link:
         # this is a relative path
-        base = append_path(context.server, context.base_url)
-        link = append_path(base, link)
+        link = append_path(context.server, link)
 
     return link

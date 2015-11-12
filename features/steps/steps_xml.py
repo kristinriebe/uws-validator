@@ -1,8 +1,8 @@
-from utils import append_path, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_absolutelink
+from utils import append_path, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_joblink
 from lxml import etree as et
 import requests
 import uws
-from ensure import ensure
+from ensure import ensure, check
 from purl import URL
 
 # for parsing dates:
@@ -31,7 +31,7 @@ def step_impl(context, element, attribute):
     for elem in elementlist:
         # check if attribute exists in list of attributes:
         ensure(attribute).is_in(elem.attrib)
-        # ensure(elem.get(attribute)).is_not_none -- if to ensure that value is not None
+        # ensure(elem.get(attribute)).is_not_none() -- if to ensure that value is not None
 
 @then('the UWS element "{element}" should exist')
 def step_impl(context, element):
@@ -46,7 +46,6 @@ def step_impl(context, element):
     #raise NotImplementedError("%r" % parsed)
     foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
     ensure(foundvalue).is_not_none()
-    # TODO: This actually tests for Not none, not if the element just exists or not!!!!
 
 @then('the UWS root element should be "{root}"')
 def step_impl(context, root):
@@ -80,7 +79,7 @@ def step_impl(context, element, child):
     elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
     for elem in elementlist:
         subelement = elem.find(get_UwsName(child), namespaces=parsed.nsmap)
-        ensure(subelement).is_not_none
+        ensure(subelement).is_not_none()
 
 @then('all UWS elements "{element}" should be one of "{values}"')
 def step_impl(context, element, values):
@@ -124,8 +123,29 @@ def step_impl(context, element, number):
 ## UWS element specific steps
 @then('the UWS job startTime should be later than "{timestamp}"')
 def step_impl(context, timestamp):
+    #raise NotImplementedError(context.response.text)
     parsed = et.fromstring(str(context.response.text))
     startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
+    # make sure there is a startTime (NULL startTime should be ignored with AFTER filter)
+    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. The http response was: %r" % context.response)
+
+    # convert startTime to UTC, in case it has a timezone attached:
+    date = dateutil.parser.parse(startTime)
+    if date.utcoffset() is not None:
+        utz = pytz.timezone('UTC')
+        date = date.astimezone(utz).replace(tzinfo=None)
+    date = date.isoformat()
+    context.job = uws.Job()
+    context.job.startTime = date
+
+    ensure(date).is_greater_than(timestamp)
+
+@then('the UWS job startTime should be later than or equal to "{timestamp}"')
+def step_impl(context, timestamp):
+    parsed = et.fromstring(str(context.response.text))
+    startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
+    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. The http response was: %r" % context.response)
+
     # convert startTime to UTC, in case it has a timezone attached:
     date = dateutil.parser.parse(startTime)
     if date.utcoffset() is not None:
@@ -145,14 +165,14 @@ def step_impl(context, timestamp):
     for jobref in jobreflist:
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
-        absolutelink = get_absolutelink(context, link, refId)
-        # Note: This is not necessarily a full link name, but could also be just the jobId! (e.g. CADC implementation)
-
+        joblink = get_joblink(context, link, refId)
         # make a get request and compare the startTime
+        #raise NotImplementedError("joblink", joblink)
         context.execute_steps(u'''
             When I make a GET request to URL "{url}"
-            Then the UWS job startTime should be later than "{timestamp}"
-            '''.format(url=absolutelink, timestamp=timestamp)
+            Then the response status should be "200"
+            And the UWS job startTime should be later than "{timestamp}"
+            '''.format(url=joblink, timestamp=timestamp)
         )
 
 @then('all UWS joblist startTimes should be later than the stored startTime')
@@ -172,12 +192,12 @@ def step_impl(context):
     for jobref in jobreflist:
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
-        absolutelink = get_absolutelink(context, link, refId)
+        joblink = get_joblink(context, link, refId)
 
         # make a get request and store the startTime
         context.execute_steps(u'''
             When I make a GET request to URL "{url}"
-            Then the UWS job startTime should be later than "{timestamp}"
-            '''.format(url=absolutelink, timestamp=timestamp)
+            Then the UWS job startTime should be later than or equal to "{timestamp}"
+            '''.format(url=joblink, timestamp=timestamp)
         )
         timestamp = context.job.startTime

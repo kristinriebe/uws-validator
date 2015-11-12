@@ -17,7 +17,7 @@ First you need to have Python (2.7) installed. To run this validator, following 
 * time
 
 ## Usage
-First a few general things about running behave with the uws-validator are explained. For the [Recommended usage], see the corresponding section below.
+First a few general things about running behave with the uws-validator are explained. For the [Recommended usage](#usage), see the corresponding section below.
 
 ### General things
     behave -D server="your_server" -D base_url="your_baseurl" -D username="your_username" -D password="your_password" <feature_file>
@@ -25,19 +25,19 @@ First a few general things about running behave with the uws-validator are expla
 You need to replace the `your_`-variables with your own values.
 For UWS services without authentication, you can omit the username and password keywords or set them to an empty string "", otherwise please provide the credentials of a user who can access the job list and create new jobs for testing. 
 
-Provide one or more <feature_file>'s on the command line to run the validator only for these features. This is recommended, if you want to run only a subset of the tests.
+Provide one or more `<feature_file>`'s on the command line to run the validator only for these features. This is recommended, if you want to run only a subset of the tests.
 
 If you want full testing, you also need to specify the parameters for a number of jobs:
-    * "veryshort" job: running < 1 sec., e.g. a simple select of 10 lines from a table
-    * short job: running for a few seconds (~10)
-    * long job: running at least 1 minute
-    * error job: a job that will return with an error
+    * `"veryshort"` job: running < 1 sec., e.g. a simple select of 10 lines from a table, used for quickly checking if creating and starting a job works, can also take longer but will then slow down the whole testing process  
+    * `"short"` job: running for a few seconds (~10, < 30 seconds), for checking the WAIT-blokcing behaviour  
+    * `"long"` job: running at least 30 seconds, only used for a few scenarios; can be ignored when excluding the scenarios tagged with "longjob", i.e. use `--tags=-longjob`  
+    * `"error"` job: a job that will return with an error  
 
 These are defined on the command line like this:
 
-    behave [...] -D job_parameters={"short": {"query": "SELECT * FROM MDR1.Redshifts", "queue": "short"}
+    behave [...] -D job_parameters={"veryshort": {"query": "SELECT * FROM MDR1.Redshifts", "queue": "short"} ...
 
-You can also setup a `behave.ini` file that includes all the settings, e.g. like this:
+You can also setup a `behave.ini` file that includes all the settings, for example:
 
 ```
 [behave]
@@ -75,7 +75,7 @@ For more advanced uses, e.g. when testing a number of services, you can also def
             "queue": "long"
          },
         "error": {
-            "query": "SELECT something to create an error",
+            "query": "SELECT something to create an error"
         }
     }
 }
@@ -112,39 +112,38 @@ The tags used here are (have a look inside the feature-files!):
     * `invalid`: Tag for UWS 1.1 scenarios with examples for invalid values, used in some (most probably not all) implementations. They are not strictly required by the standard.    
     * `slow`: tag for scenarios that are expected to be slow because they make a larger number of requests to the server (e.g. one for each job in the job list) or wait for certain things to happen  
     * `veryslow`: tag for scenarios that include a long wait (> 30 seconds)  
-    * `need_wait`: Scenarios tagged like this include a WAIT-blocking command, so they will only works properly if WAIT is correctly implemented. If the job_wait.feature-scenarios failed, then exclude these tests.  
-
+    * `longjob`: exclude this tag if you have no long job defined in user configuration  
+    * `shortjob`: exclude this tag if you have no short job defined in user configuration (needed only for testing WAIT-blocking)
 Also see https://pythonhosted.org/behave/tutorial.html#controlling-things-with-tags for more information on tags and their syntax with behave.
 
 ### Recommended usage
 Store your details in the file `userconfig.json` and run the following steps one after each other. Make sure after each step that all scenarios pass without error before continuing.
 
-1. `behave -D configfile="userconfig.json" features/account.feature`
+1. `behave -D configfile="userconfig.json" features/account.feature`  
     This ensures that the user can access the given UWS-endpoint
-2. `behave -D configfile="userconfig.json" --no-skipped --tags=basics`
-    This additionally checks if the user gets a job list returned and if he/she can create a "veryshort" pending job. If this fails, you need to fix this first. If it cannot be fixed, then only some tests for the joblist.feature will work, all other tests will fail.
-3. For UWS 1.0 services exclude all 1.1 tests:
-    `behave -D configfile="userconfig.json" --no-skipped --tags=-uws_1_1`
-    For UWS 1.1 services, first do the fast tests:
+2. `behave -D configfile="userconfig.json" --no-skipped --tags=basics`  
+    This additionally checks if the user gets a job list returned and if he/she can create a "veryshort" pending job. If this fails, you need to fix this first. If it cannot be fixed, then only some tests for the *joblist.feature* will work, all other tests will fail.
+3. For UWS 1.0 services exclude all 1.1 tests:  
+    `behave -D configfile="userconfig.json" --no-skipped --tags=-uws1_1`  
+    For UWS 1.1 services, first do the fast tests:  
     `behave -D configfile="userconfig.json" --no-skipped --tags=-slow --tags=-veryslow`
-4. Do the remaining slow tests:
+4. Do the remaining slow tests:  
     `behave -D configfile="userconfig.json" --no-skipped --tags=slow,veryslow`
 
 You can also exclude all tests for the WAIT-blocking mechanism by
-excluding the job_wait.feature file and the tag "need_wait" like this:
+excluding the *job_wait.feature* file like this:
 `behave -D configfile="userconfig.json" --no-skipped -e features/job_wait.feature`
 
 ## TODO
-* Standard defines href-links in the joblist as optional, but I assumed it's mandatory and used it, so I need to fix this (or mention it in issues).
-* Properly define different testing levels, tag accordingly and describe how to use
-* Use skip to exclude features/scenarios if given-conditions are not met, see
+* The validator just uses the existing list of jobs for checking job-filtering. If there are no existing jobs in the list, the joblist-features cannot really be tested. Thus need to create a setup with a number of jobs with different phases before doing the joblist-tests + remove them all at the end.
+* Properly define different testing levels, tag accordingly and describe how to use; maybe wrap behave with own main-function
+* Use skip to exclude features/scenarios automatically, if given-conditions are not met, see
   http://pythonhosted.org//behave/new_and_noteworthy_v1.2.5.html#exclude-feature-scenario-at-runtime
-* Create a setup with a number of jobs with different phases before doing the joblist-tests, remove them all at the end.
 * Properly treat errors.
+* Improve error messages.
 * Write self tests to check that xml-parsing etc. works properly
   (cannot check exact outcome - may differ from server to server)
-* Check if it also works for non-Daiquiri webservices
-
+* Check if it also works for non-Daiquiri webservices (tested so far with DaCHS, CADC)
 
 ## Known Issues
 * If jobs can be deleted on the tested server at any time during the test runs by someone else, then certain assumptions are changing in between and tests are not reliable and may fail due to missing jobs. This can happen if the server is live and uses no authentication or if jobs are destroyed rather quickly.

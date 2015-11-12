@@ -1,8 +1,8 @@
-from utils import append_path, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_absolutelink
+from utils import append_path, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_joblink
 from lxml import etree as et
 import requests
 import uws
-from ensure import ensure
+from ensure import ensure, check
 from purl import URL
 
 # for parsing dates:
@@ -27,6 +27,9 @@ def step_impl(context, jobtype):
     phasetext = u'''| PHASE  | RUN |\n'''
     context.execute_steps(when_step + paramtext + phasetext)
 
+    # make sure that response was okay and did not return error
+    if context.response.status_code != 200:
+        raise NotImplementedError("Response was not 200 OK, but %d, with the message:\n%r." % (context.response.status_code, context.response.text))
     # look for jobId immediately and store it
     parsed = et.fromstring(str(context.response.text))
     jobId = parsed.find(get_UwsName("jobId"), namespaces=parsed.nsmap).text
@@ -276,19 +279,19 @@ def step_impl(context):
         raise NotImplementedError("Job list contains only %d jobs. Cannot test using this step." % len(elementlist))
     # also cannot test this, if there are no start times!!
     # Problem: there is not even any kind of ordering in the job list that I could assume,
-    # so just search for the first two jobs that have a startTime
+    # so just search for the first two jobs that have a startTime that is not exactly the same
 
     i = 0
     job_startTimes = []
     while len(job_startTimes) < 2:
         startTime = None
         while startTime is None and i < len(elementlist):
-            jobref = elementlist[-i] # use -i here, sicne I expect descending ordering, if any
+            jobref = elementlist[-i] # use -i here, since I expect descending ordering, if any
             refId = jobref.get("id")
             link = jobref.get(get_XlinkName("href"))
-            absolutelink = get_absolutelink(context, link, refId)
+            joblink = get_joblink(context, link, refId)
             response = requests.get(
-                absolutelink,
+                joblink,
                 headers=context.headers,
                 auth=context.auth
             )
@@ -304,13 +307,17 @@ def step_impl(context):
                 utz = pytz.timezone('UTC')
                 date = date.astimezone(utz).replace(tzinfo=None)
                 date = date.isoformat()
-            job_startTimes.append(date)
+            # check if it is not exactly the same as previous ones,
+            # since we need different times for AFTER condition to work:
+            if date not in job_startTimes:
+                job_startTimes.append(date)
         else:
             raise NotImplementedError("Cannot find enough jobs with a startTime, thus cannot test Scenarios using this. %r %r" % (link, startTime))
 
     # store the smallest startTime of these to ensure that I will get at 
     # least one result returned when filtering by this startTime
     context.startTime_filter = min(job_startTimes)
+    # raise NotImplementedError("context.startTime_filter %r %r " % (context.startTime_filter, job_startTimes))
 
 
 @when('I apply the AFTER filter with the stored startTime')

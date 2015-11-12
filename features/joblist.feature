@@ -13,11 +13,10 @@ Feature: Job list filters
 
   Background: Set server name, headers and user account
     Given I set base URL to user-defined value
-      And I set "Accept" header to "application/xml"
       And I set BasicAuth username and password to user-defined values
 
   @basics
-  Scenario: Get the (complete) job list
+  Scenario: Get the job list
     # Note: not sure yet how to handle it if a redirect is returned!
     When I make a GET request to base URL
     Then the response status should be "200"
@@ -105,10 +104,11 @@ Feature: Job list filters
 
     Examples: Phase combinations (selection)
       | phase1    | phase2    |
-      | PENDING   | QUEUED    |
-      | EXECUTING | COMPLETED |
+      | PENDING   | ERROR    |
       | COMPLETED | ERROR     |
       | ERROR     | ABORTED   |
+    # NOTE: better avoid testing with EXECUTING and QUEUED phase since they
+    # may change right in between while testing!
 
   @uws1_1
   Scenario Outline: Three PHASE filters

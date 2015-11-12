@@ -1,8 +1,8 @@
-from utils import append_path, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_absolutelink
+from utils import append_path, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_joblink
 from lxml import etree as et
 import requests
 import uws
-from ensure import ensure
+from ensure import ensure, check
 from purl import URL
 
 # for parsing dates:
@@ -35,8 +35,9 @@ def set_basic_auth_headers(context, username, password):
 
 @when('I make a GET request to "{url_path_segment}"')
 def step_impl(context, url_path_segment):
-    #raise NotImplementedError("url: %r" % url_path_segment)
     url = append_path(context.server, url_path_segment)
+#    if not url_path_segment.startswith('?'):
+    # raise NotImplementedError("url: %r" % url)
     context.response = requests.get(
         url,
         headers=context.headers,

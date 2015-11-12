@@ -27,6 +27,7 @@ Feature: Job
     When I create a user-defined "veryshort" job
      And I delete the same job
     Then the response status should be "200"
+    # or should this be 303?
      And the UWS root element should be "jobs"
 
     When I get the job details of the same job
@@ -72,6 +73,7 @@ Feature: Job
 
   #@need_wait
   @slow
+  @longjob
   @queue
   # The following scenario will only work if the server does not block and wait until the job is done!
   # I.e. it's asynchronous, there must be a queueing system behind it
