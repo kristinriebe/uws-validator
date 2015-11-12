@@ -3,7 +3,7 @@ from lxml import etree as et
 import requests
 
 
-# from behave-http:
+# from behave-http, slightly adjusted:
 def append_path(url, path):
     target = URL(path)
     if target.path():
