@@ -64,7 +64,7 @@ def delete_job(context, jobId):
         print ("Job deletion was not successful: %s, %s" % (jobId, response.text))
 
 
-def get_joblink(context, link, refId):
+def get_joblink(server, link, refId):
     # Check, if the link is absolute,
     # if not: prepend the server name and base url.
     # Also check, if link is None (it's an optional attribute),
@@ -79,6 +79,6 @@ def get_joblink(context, link, refId):
 
     if "://" not in link:
         # this is a relative path
-        link = append_path(context.server, link)
+        link = append_path(server, link)
 
     return link

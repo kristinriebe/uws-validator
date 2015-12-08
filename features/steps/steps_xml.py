@@ -127,7 +127,7 @@ def step_impl(context, timestamp):
     parsed = et.fromstring(str(context.response.text))
     startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
     # make sure there is a startTime (NULL startTime should be ignored with AFTER filter)
-    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. The http response was: %r" % context.response)
+    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
 
     # convert startTime to UTC, in case it has a timezone attached:
     date = dateutil.parser.parse(startTime)
@@ -144,7 +144,7 @@ def step_impl(context, timestamp):
 def step_impl(context, timestamp):
     parsed = et.fromstring(str(context.response.text))
     startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
-    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. The http response was: %r" % context.response)
+    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
 
     # convert startTime to UTC, in case it has a timezone attached:
     date = dateutil.parser.parse(startTime)
@@ -165,9 +165,10 @@ def step_impl(context, timestamp):
     for jobref in jobreflist:
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
-        joblink = get_joblink(context, link, refId)
+        joblink = get_joblink(context.server, link, refId)
         # make a get request and compare the startTime
         #raise NotImplementedError("joblink", joblink)
+        context.joblink = joblink
         context.execute_steps(u'''
             When I make a GET request to URL "{url}"
             Then the response status should be "200"
@@ -192,7 +193,7 @@ def step_impl(context):
     for jobref in jobreflist:
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
-        joblink = get_joblink(context, link, refId)
+        joblink = get_joblink(context.server, link, refId)
 
         # make a get request and store the startTime
         context.execute_steps(u'''

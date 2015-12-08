@@ -46,9 +46,11 @@ def step_impl(context, jobtype):
         paramtext = paramtext + u'''| {key}  | {value} |\n'''.format(key=key, value=value)
 
     context.execute_steps(when_step + paramtext)
+    #print ("response: ", context.response)
 
     # look for jobId immediately and store it
     parsed = et.fromstring(str(context.response.text))
+    #print ("parsed: ", parsed)
     jobId = parsed.find(get_UwsName("jobId"), namespaces=parsed.nsmap).text
 
     context.job = uws.Job()
@@ -289,7 +291,7 @@ def step_impl(context):
             jobref = elementlist[-i] # use -i here, since I expect descending ordering, if any
             refId = jobref.get("id")
             link = jobref.get(get_XlinkName("href"))
-            joblink = get_joblink(context, link, refId)
+            joblink = get_joblink(context.server, link, refId)
             response = requests.get(
                 joblink,
                 headers=context.headers,

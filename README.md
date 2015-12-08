@@ -1,13 +1,14 @@
 # UWS validator
 
-This validator uses the [behave](https://pypi.python.org/pypi/behave) Python module for functional tests of a UWS (1.1) server.
-It uses the [Gherkin](https://cucumber.io/docs/reference) syntax (known from the Cucumber project) to define features to be tested in an easy-to-read English-like language. The features that I defined for UWS services are given in the `features`-directory. There is one file for each feature, each containing one to many scenarios. The `steps`-subdirectory contains the actual implementations for each step of the scenarios.
+This projects shall help to make functional tests of UWS (1.1) services as specified by the [IVOA](http://www.ivoa.net/documents/UWS). It uses [behave](https://pypi.python.org/pypi/behave), a Python module for functional testing.
+
+The [Gherkin](https://cucumber.io/docs/reference) syntax (which originates from the Cucumber project) is used to define features that shall be tested in an easy-to-read English-like language. The features that I defined for UWS services are given in the `features`-directory. There is one file for each feature, each containing one to many scenarios. The `steps`-subdirectory contains the actual implementations for each step of the scenarios.
 
 For the **impatient**: Please have a look at [User configuration](#user-configuration-parameters) and [Recommended usage](#recommended-usage) first for a quick start.
 
 
 ## Installation
-First you need to have Python (2.7) installed. Download the files of this project. Following additional packages are needed to run this validator:
+First you need to have Python (2.7) installed. Then download the files of this project to a directory of your choice. Following additional packages are needed to run this validator:
 
 * **behave:** https://pypi.python.org/pypi/behave
 * requests: for sending http requests
@@ -38,7 +39,7 @@ There are a number of parameters required, which you can pass on the command lin
 * `job_parameters`: If you want full testing, you also need to specify the parameters for a number of jobs:
 
     - `"veryshort"` job: running < 1 sec., e.g. a simple select of 10 lines from a table, used for quickly checking if creating and starting a job works, can also take longer but will then slow down the whole testing process  
-    - `"short"` job: running for a few seconds (~10, < 30 seconds), for checking the WAIT-blokcing behaviour  
+    - `"short"` job: running for a few seconds (~10, < 30 seconds), for checking the WAIT-blocking behaviour  
     - `"long"` job: running at least 30 seconds, only used for a few scenarios; can be ignored when excluding the scenarios tagged with "longjob", i.e. use `--tags=-longjob`  
     - `"error"` job: a job that will return with an error  
 * (optional) `requestdelay`: a delay time in seconds which the server needs to respond to a simple request. The default is 2 seconds, but you can make it longer if the server takes more time to respond. Important for testing UWS1.1 blocking behaviour with WAIT.
@@ -126,7 +127,7 @@ The tags used here are (have a look inside the feature-files!)
 * `version`: Use this tag to check (or exclude the check) for the correct version number for UWS 1.1 servers. This will be automatically excluded, if uws1_1 is excluded.  
 * `invalid`: Tag for UWS 1.1 scenarios with examples for invalid values, used in some (most probably not all) implementations. They are not strictly required by the standard.    
 * `slow`: tag for scenarios that are expected to be slow because they make a larger number of requests to the server (e.g. one for each job in the job list) or wait for certain things to happen  
-* `veryslow`: tag for scenarios that include a long wait (> 30 seconds)  
+* `neverending`: tag for the waiting forever feature (WAIT=-1)
 * `longjob`: exclude this tag if you have no long job defined in user configuration  
 * `shortjob`: exclude this tag if you have no short job defined in user configuration (needed only for testing WAIT-blocking)  
 

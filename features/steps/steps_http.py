@@ -120,12 +120,14 @@ def step_impl(context):
     datadict = get_dict_from_paramtable(context.table)
 
     url = context.server
+    #print ("url: ", url)
     context.response = requests.post(
         url,
         data=datadict,
         headers=context.headers,
         auth=context.auth
     )
+    #print("response: ", context.response, context.response.text)
 
 @then('the "{var}" header should contain "{value}"')
 def check_header_inline(context, var, value):

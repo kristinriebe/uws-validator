@@ -80,7 +80,7 @@ Feature: Job
      And the request time should be shorter than the wait time
      And the UWS element "phase" should be "COMPLETED"
 
-  @veryslow
+  @neverending
   @uws1_1
   Scenario: Wait forever
     When I create a user-defined "veryshort" job
