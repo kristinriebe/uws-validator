@@ -1,8 +1,8 @@
 # UWS validator
 
-This projects shall help to make functional tests of UWS (1.1) services as specified by the [IVOA](http://www.ivoa.net/documents/UWS). It uses [behave](https://pypi.python.org/pypi/behave), a Python module for functional testing.
+This project shall help to make functional tests of UWS (1.1) services as specified by the [IVOA](http://www.ivoa.net/documents/UWS). It uses [behave](https://pypi.python.org/pypi/behave), a Python module for functional testing.
 
-The [Gherkin](https://cucumber.io/docs/reference) syntax (which originates from the Cucumber project) is used to define features that shall be tested in an easy-to-read English-like language. The features that I defined for UWS services are given in the `features`-directory. There is one file for each feature, each containing one to many scenarios. The `steps`-subdirectory contains the actual implementations for each step of the scenarios.
+The [Gherkin](https://cucumber.io/docs/reference) syntax (which originates from the Cucumber project for Ruby) is used to define features that shall be tested in an easy-to-read English-like language. The features that I defined for UWS services are given in the `features`-directory. There is one file for each feature, each containing one to many scenarios. The `steps`-subdirectory contains the actual implementations for each step of the scenarios.
 
 For the **impatient**: Please have a look at [User configuration](#user-configuration-parameters) and [Recommended usage](#recommended-usage) first for a quick start.
 
