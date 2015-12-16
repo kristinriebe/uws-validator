@@ -138,6 +138,9 @@ def step_impl(context, timestamp):
     context.job = uws.Job()
     context.job.startTime = date
 
+    # also convert timestamp to a useful format for comparison (not helping with format like 2015-W01 though)
+    timestamp = dateutil.parser.parse(timestamp)
+
     ensure(date).is_greater_than(timestamp)
 
 @then('the UWS job startTime should be later than or equal to "{timestamp}"')
@@ -154,6 +157,9 @@ def step_impl(context, timestamp):
     date = date.isoformat()
     context.job = uws.Job()
     context.job.startTime = date
+
+    # also convert timestamp to a useful format for comparison (not helping with format like 2015-W01 though)
+    timestamp = dateutil.parser.parse(timestamp)
 
     ensure(date).is_greater_than_or_equal_to(timestamp)
 
@@ -194,6 +200,7 @@ def step_impl(context):
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
         joblink = get_joblink(context.server, link, refId)
+        context.joblink = joblink;
 
         # make a get request and store the startTime
         context.execute_steps(u'''

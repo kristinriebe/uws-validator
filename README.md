@@ -163,9 +163,11 @@ excluding the *job_wait.feature* file like this:
 * Check if it also works for non-Daiquiri webservices (tested so far with DaCHS, CADC)
 
 ## Known Issues
-* If jobs can be deleted on the tested server at any time during the test runs by someone else, then certain assumptions are changing in between and tests are not reliable and may fail due to missing jobs. This can happen if the server is live and uses no authentication or if jobs are destroyed rather quickly.
-* For AFTER- and LAST-filters, the startTime of each job must be known. Thus jobs that are generated during testing must first start, before they can appear in the job list and be filtered. For services which have a queueing mechanism and are under heavy load this may take hours or even days.
+* If jobs can be deleted on the tested server at any time during the test runs by someone else, then certain assumptions are changing during the test runs, some tests won't be reliable and may fail due to missing jobs. This can happen if the server is live and uses no authentication or if jobs are destroyed rather quickly.
+* For AFTER- and LAST-filters, the startTime of each job must be known. Thus jobs that are generated during testing must first start, before they can appear in the job list and be filtered. For services which have a queuing mechanism and are under heavy load this may take hours or even days.
 * Some servers support the WAIT-feature only as long as the server is not under heavy load. That means the WAIT-tests may pass at one time and fail at another time.
+* When testing WAIT for an executing short job, I expect a measurable delay of a few seconds. However, database servers may use caching, so that repeated queries for the same results finish much faster. Thus the corresponding WAIT-test may fail just because the server got faster. Use a different version of the short-query in the userconfig-file for these cases.
+* Datetimes: UWS standard defines ISO 8601 format for all datetimes. This also means that datetimes like `2015-W01` or `20151026` are also valid. However, they are not supported by the Python libraries used here (dateutil, datetime), so testing for such date strings would return with an error. 
 
 ## License
 I've copied some pieces for basic http-steps from behave-http from https://github.com/mikek/behave-http (BSD 2-Clause License), but did not want to import the complete package, because of all its additional dependencies (for setting up test server, json-support). 

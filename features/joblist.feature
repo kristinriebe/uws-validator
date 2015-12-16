@@ -92,7 +92,7 @@ Feature: Job list filters
     Examples: Invalid phases
       | phase        |
       | SUCCESS      |
-      | pending      |
+      | pendinggg    |
       | somenonsense |
       | 1345         |
  
@@ -191,6 +191,9 @@ Feature: Job list filters
       | 2015-10-26T09:00    |
       | 2015-10-26          |
       | 2015                |
+#      | 2015-W01            |
+#      | 20151026            |
+
 
   @invalid
   @uws1_1
@@ -200,7 +203,7 @@ Feature: Job list filters
 
     Examples: Invalid AFTER values
       | datetime               |
-      | 2015-10-26T09          |
+#      | 2015-10-26T09          |
       | 2015-26-10             |
       | sometext               |
       | 2015-10-26T09:00+01:00 |
