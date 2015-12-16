@@ -160,7 +160,7 @@ excluding the *job_wait.feature* file like this:
 * Improve error messages.
 * Write self tests to check that xml-parsing etc. works properly
   (cannot check exact outcome - may differ from server to server)
-* Check if it also works for non-Daiquiri webservices (tested so far with DaCHS, CADC)
+* Check if it also works for non-Daiquiri webservices (tested so far with Daiquiri, DaCHS, CADC, Gaia at mintaka.ari.uni-heidelberg.de)
 
 ## Known Issues
 * If jobs can be deleted on the tested server at any time during the test runs by someone else, then certain assumptions are changing during the test runs, some tests won't be reliable and may fail due to missing jobs. This can happen if the server is live and uses no authentication or if jobs are destroyed rather quickly.
@@ -172,5 +172,17 @@ excluding the *job_wait.feature* file like this:
 ## License
 I've copied some pieces for basic http-steps from behave-http from https://github.com/mikek/behave-http (BSD 2-Clause License), but did not want to import the complete package, because of all its additional dependencies (for setting up test server, json-support). 
 That part is included in `steps_http.py` licensed under BSD 2-Clause License, see LICENSE_behave-http.
+The remaining things are 
 
-Still need to clarify which License we need to use for the other stuff, for now just expect it's free to use by anyone for anything without any restrictions and without any warranty from our side.
+   Copyright 2015 Kristin Riebe, AIP (Leibniz-Institute for Astrophysics Potsdam) <kriebe@aip.de>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
