@@ -139,7 +139,7 @@ def step_impl(context, timestamp):
     context.job.startTime = date
 
     # also convert timestamp to a useful format for comparison (not helping with format like 2015-W01 though)
-    timestamp = dateutil.parser.parse(timestamp)
+    timestamp = dateutil.parser.parse(timestamp).isoformat()
 
     ensure(date).is_greater_than(timestamp)
 
@@ -159,7 +159,7 @@ def step_impl(context, timestamp):
     context.job.startTime = date
 
     # also convert timestamp to a useful format for comparison (not helping with format like 2015-W01 though)
-    timestamp = dateutil.parser.parse(timestamp)
+    timestamp = dateutil.parser.parse(timestamp).isoformat()
 
     ensure(date).is_greater_than_or_equal_to(timestamp)
 
