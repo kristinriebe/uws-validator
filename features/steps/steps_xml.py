@@ -195,7 +195,7 @@ def step_impl(context):
     parsed = et.fromstring(str(context.response.text))
     element = "jobref"
     jobreflist = parsed.findall(get_UwsName(element), namespaces=parsed.nsmap)
-    timestamp = '0000-00-00T00:00:00'
+    timestamp = '1970-01-01T00:00:00'
     for jobref in jobreflist:
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
