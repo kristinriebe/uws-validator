@@ -143,9 +143,11 @@ Store your details in the file `userconfig.json` and run the following steps one
 3. For UWS 1.0 services exclude all 1.1 tests:  
     `behave -D configfile="userconfig.json" --no-skipped --tags=-uws1_1`  
     For UWS 1.1 services, first do the fast tests:  
-    `behave -D configfile="userconfig.json" --no-skipped --tags=-slow --tags=-veryslow`
+    `behave -D configfile="userconfig.json" --no-skipped --tags=-slow --tags=-neverending`
 4. Do the remaining slow tests:  
-    `behave -D configfile="userconfig.json" --no-skipped --tags=slow,veryslow`
+    `behave -D configfile="userconfig.json" --no-skipped --tags=slow`
+5. Do the remaing "neverending" test:
+    `behave -D configfile="userconfig.json" --no-skipped --tags=neverending`
 
 You can also exclude all tests for the WAIT-blocking mechanism by
 excluding the *job_wait.feature* file like this:
