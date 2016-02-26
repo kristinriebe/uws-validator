@@ -102,9 +102,9 @@ def step_impl(context, timeinseconds):
     jobId = context.job.get_jobId()
     url = append_path(context.server, jobId + "/phase")
 
-    phase = None
+    phase = "PENDING"
     status_code = 200
-    pre_starting_phase = ["PENDING", "QUEUED", "HELD"]
+    pre_starting_phase = ["PENDING", "QUEUED", "HELD", "SUSPENDED"]
     while phase in pre_starting_phase and status_code == 200:
         time.sleep(int(timeinseconds))
 

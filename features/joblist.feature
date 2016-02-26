@@ -1,10 +1,8 @@
 # This feature tests
 # 1) if a job list is returned properly
 # 2) if the new UWS1.1 phase filters are applied correctly
-# The testing is done passively, i.e. no new jobs are created,
-# just the ones that can be retrieved can be filtered.
-# This is not as elaborate as it could be, but is a good starting point for
-# testing if the user cannot create new jobs.
+# The testing involves now also the creation of new jobs for proper testing
+# of job list filtering.
 
 Feature: Job list filters
   In order to retrieve a subset of UWS jobs from a UWS service
@@ -52,8 +50,8 @@ Feature: Job list filters
     Then the response status should be "200"
      And the UWS root element should be "jobs"
      And the UWS root element should contain UWS elements "jobref"
-    # TODO: And each UWS element "jobref"  should have an attribute  "id" optional??
-    # TODO: And each UWS element "jobref"  should have an attribute  "xlink:href"
+    # TODO: And each UWS element "jobref"  should have an attribute  "id"
+    # TODO: And each UWS element "jobref"  should have an attribute  "xlink:href" # this is optional
     # TODO: And each UWS element "jobref"  should have an element "phase"
      And all UWS elements "phase" should be one of "PENDING, QUEUED, EXECUTING, COMPLETED, ERROR, ABORTED, HELD, SUSPENDED, UNKNOWN"
      # and phase should never be ARCHIVED, unless explicitely asked for!
