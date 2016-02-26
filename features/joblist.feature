@@ -132,7 +132,7 @@ Feature: Job list filters
 
     Examples: Valid numbers for LAST
       | last |
-      | 0    |
+      | 1    |
       | 3    |
       | 254  |
       | 3423 |
