@@ -10,7 +10,7 @@ For the **impatient**: Please have a look at [User configuration](#user-configur
 ## Installation
 First you need to have Python (2.7) installed. Then download the files of this project to a directory of your choice. Following additional packages are needed to run this validator:
 
-* **behave:** https://pypi.python.org/pypi/behave
+* **behave:** https://pypi.python.org/pypi/behave; `pip install behave`
 * requests: for sending http requests
 * ensure: for assertions
 * lxml: for xml parsing
