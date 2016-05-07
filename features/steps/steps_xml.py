@@ -121,49 +121,69 @@ def step_impl(context, element, number):
 
 
 ## UWS element specific steps
-@then('the UWS job startTime should be later than "{timestamp}"')
+@then('the UWS job creationTime should be later than "{timestamp}"')
 def step_impl(context, timestamp):
     #raise NotImplementedError(context.response.text)
     parsed = et.fromstring(str(context.response.text))
-    startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
-    # make sure there is a startTime (NULL startTime should be ignored with AFTER filter)
-    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
+    creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
+    # make sure there is a creationTime (NULL creationTime should be ignored with AFTER filter)
+    check(creationTime).is_not_none().or_raise(Exception, "Error with creationTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
 
-    # convert startTime to UTC, in case it has a timezone attached:
-    date = dateutil.parser.parse(startTime)
+    # convert creationTime to UTC, in case it has a timezone attached:
+    date = dateutil.parser.parse(creationTime)
     if date.utcoffset() is not None:
         utz = pytz.timezone('UTC')
         date = date.astimezone(utz).replace(tzinfo=None)
     date = date.isoformat()
     context.job = uws.Job()
-    context.job.startTime = date
+    context.job.creationTime = date
 
     # also convert timestamp to a useful format for comparison (not helping with format like 2015-W01 though)
     timestamp = dateutil.parser.parse(timestamp).isoformat()
 
     ensure(date).is_greater_than(timestamp)
 
-@then('the UWS job startTime should be later than or equal to "{timestamp}"')
+@then('the UWS job creationTime should be later than or equal to "{timestamp}"')
 def step_impl(context, timestamp):
     parsed = et.fromstring(str(context.response.text))
-    startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
-    check(startTime).is_not_none().or_raise(Exception, "Error with startTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
+    creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
+    check(creationTime).is_not_none().or_raise(Exception, "Error with creationTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
 
-    # convert startTime to UTC, in case it has a timezone attached:
-    date = dateutil.parser.parse(startTime)
+    # convert creationTime to UTC, in case it has a timezone attached:
+    date = dateutil.parser.parse(creationTime)
     if date.utcoffset() is not None:
         utz = pytz.timezone('UTC')
         date = date.astimezone(utz).replace(tzinfo=None)
     date = date.isoformat()
     context.job = uws.Job()
-    context.job.startTime = date
+    context.job.creationTime = date
 
     # also convert timestamp to a useful format for comparison (not helping with format like 2015-W01 though)
     timestamp = dateutil.parser.parse(timestamp).isoformat()
 
     ensure(date).is_greater_than_or_equal_to(timestamp)
 
-@then('all UWS joblist startTimes should be later than "{timestamp}"')
+@then('the UWS job creationTime should be earlier than or equal to "{timestamp}"')
+def step_impl(context, timestamp):
+    parsed = et.fromstring(str(context.response.text))
+    creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
+    check(creationTime).is_not_none().or_raise(Exception, "Error with creationTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
+
+    # convert creationTime to UTC, in case it has a timezone attached:
+    date = dateutil.parser.parse(creationTime)
+    if date.utcoffset() is not None:
+        utz = pytz.timezone('UTC')
+        date = date.astimezone(utz).replace(tzinfo=None)
+    date = date.isoformat()
+    context.job = uws.Job()
+    context.job.creationTime = date
+
+    # also convert timestamp to a useful format for comparison (not helping with format like 2015-W01 though)
+    timestamp = dateutil.parser.parse(timestamp).isoformat()
+
+    ensure(date).is_less_than_or_equal_to(timestamp)
+
+@then('all UWS joblist creationTimes should be later than "{timestamp}"')
 def step_impl(context, timestamp):
     parsed = et.fromstring(str(context.response.text))
     element = "jobref"
@@ -172,40 +192,40 @@ def step_impl(context, timestamp):
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
         joblink = get_joblink(context.server, link, refId)
-        # make a get request and compare the startTime
+        # make a get request and compare the creationTime
         #raise NotImplementedError("joblink", joblink)
         context.joblink = joblink
         context.execute_steps(u'''
             When I make a GET request to URL "{url}"
             Then the response status should be "200"
-            And the UWS job startTime should be later than "{timestamp}"
+            And the UWS job creationTime should be later than "{timestamp}"
             '''.format(url=joblink, timestamp=timestamp)
         )
 
-@then('all UWS joblist startTimes should be later than the stored startTime')
+@then('all UWS joblist creationTimes should be later than the stored creationTime')
 def step_impl(context):
     context.execute_steps(u'''
-        Then all UWS joblist startTimes should be later than "{timestamp}"
-        '''.format(timestamp=context.startTime_filter)
+        Then all UWS joblist creationTimes should be later than "{timestamp}"
+        '''.format(timestamp=context.creationTime_filter)
     )
 
 
-@then('the UWS joblist should be sorted by startTime in ascending order')
+@then('the UWS joblist should be sorted by creationTime in descending order')
 def step_impl(context):
     parsed = et.fromstring(str(context.response.text))
     element = "jobref"
     jobreflist = parsed.findall(get_UwsName(element), namespaces=parsed.nsmap)
-    timestamp = '1970-01-01T00:00:00'
+    timestamp = '2999-01-01T00:00:00'
     for jobref in jobreflist:
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
         joblink = get_joblink(context.server, link, refId)
         context.joblink = joblink;
 
-        # make a get request and store the startTime
+        # make a get request and store the creationTime
         context.execute_steps(u'''
             When I make a GET request to URL "{url}"
-            Then the UWS job startTime should be later than or equal to "{timestamp}"
+            Then the UWS job creationTime should be earlier than or equal to "{timestamp}"
             '''.format(url=joblink, timestamp=timestamp)
         )
-        timestamp = context.job.startTime
+        timestamp = context.job.creationTime

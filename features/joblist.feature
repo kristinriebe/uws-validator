@@ -126,12 +126,13 @@ Feature: Job list filters
     When I make a GET request to "?LAST=<last>"
     Then the response status should be "200"
      And the number of UWS elements "jobref" should be less than or equal to "<last>"
-     And the UWS joblist should be sorted by startTime in ascending order
+     And the UWS joblist should be sorted by creationTime in descending order
 
     Examples: Valid numbers for LAST
       | last |
       | 1    |
       | 3    |
+      | 120  |
       | 254  |
       | 3423 |
 
@@ -154,7 +155,7 @@ Feature: Job list filters
     When I make a GET request to "?PHASE=<phase>&LAST=<last>"
     Then the response status should be "200"
      And the number of UWS elements "jobref" should be less than or equal to "<last>"
-     And the UWS joblist should be sorted by startTime in ascending order
+     And the UWS joblist should be sorted by creationTime in descending order
 
     Examples: PHASE and LAST values
       | phase      | last     |
@@ -162,31 +163,18 @@ Feature: Job list filters
       | ERROR      | 5        |
       | ABORTED    | 5        |
 
-  @slow
-  @uws1_1
-  Scenario Outline: Combination of PHASE and LAST filter for jobs with no startTimes
-    # jobs in QUEUED/PENDING phase have no startTime, thus should be ignored
-    When I make a GET request to "?PHASE=<phase>&LAST=<last>"
-    Then the response status should be "200"
-     And the number of UWS elements "jobref" should be "0"
-     And the UWS joblist should be sorted by startTime in ascending order
-
-    Examples: PHASE and LAST values for jobs with no startTime
-      | phase      | last     |
-      | PENDING    | 10       |
-      | QUEUED     | 10       |
 
   @slow
   @uws1_1
   Scenario Outline: AFTER filter with different valid date formats
     When I make a GET request to "?AFTER=<datetime>"
     Then the response status should be "200"
-     And all UWS joblist startTimes should be later than "<datetime>"
+     And all UWS joblist creationTimes should be later than "<datetime>"
     
     Examples: Valid AFTER values
       | datetime            |
       | 2015-10-26T09:15:35 |
-      | 2015-10-26T09:00    |
+      | 2015-10-26 09:00    |
       | 2015-10-26          |
       | 2015                |
       | 20151026            |
@@ -209,21 +197,21 @@ Feature: Job list filters
   @test
   @slow
   @uws1_1
-  Scenario: AFTER filter using startTime from job list
+  Scenario: AFTER filter using creationTime from job list
     When I make a GET request to base URL
-     And I pick a startTime from the job list
-     And I apply the AFTER filter with the stored startTime
+     And I pick a creationTime from the job list
+     And I apply the AFTER filter with the stored creationTime
     Then the response status should be "200"
      And the number of UWS elements "jobref" should be greater than or equal to "1"
 #     And the number of UWS elements "jobref" should be less than the total number of jobs
-     And all UWS joblist startTimes should be later than the stored startTime
+     And all UWS joblist creationTimes should be later than the stored creationTime
 
   @slow
   @uws1_1
   Scenario Outline: Combination of PHASE and AFTER filter
     When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
     Then the response status should be "200"
-     And all UWS joblist startTimes should be later than "<datetime>"
+     And all UWS joblist creationTimes should be later than "<datetime>"
 
     Examples: PHASE and AFTER values
       | phase      | datetime         |
@@ -233,24 +221,12 @@ Feature: Job list filters
 
   @slow
   @uws1_1
-  Scenario Outline: Combination of PHASE and AFTER filter for jobs with no startTimes
-    When I make a GET request to "?PHASE=<phase>&AFTER=<datetime>"
-    Then the response status should be "200"
-     And the number of UWS elements "jobref" should be "0"
-
-    Examples: PHASE and AFTER values for jobs with no startTime
-      | phase      | datetime         |
-      | PENDING    | 2015-10-26T09:00 |
-      | QUEUED     | 2015-10-26T09:00 |
-
-  @slow
-  @uws1_1
   Scenario Outline: Combination of LAST and AFTER filter
     When I make a GET request to "?LAST=<last>&AFTER=<datetime>"
     Then the response status should be "200"
      And the number of UWS elements "jobref" should be less than or equal to "<last>"
-     And all UWS joblist startTimes should be later than "<datetime>"
-     And the UWS joblist should be sorted by startTime in ascending order
+     And all UWS joblist creationTimes should be later than "<datetime>"
+     And the UWS joblist should be sorted by creationTime in descending order
 
     Examples: AFTER and LAST values
       | datetime         | last     |

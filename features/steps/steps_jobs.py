@@ -228,7 +228,7 @@ def step_impl(context, waittime, phase):
     context.waittime = int(waittime) # check?
     endtime = datetime.now()
     difftime = endtime - starttime
-    context.requesttime = difftime.seconds
+    context.requesttime = difftime.microseconds/1.e6
     # TODO: maybe check that days is 0 first
 
 
@@ -273,21 +273,21 @@ def step_impl(context, timeinseconds):
 def step_impl(context):
     context.utcdatetime = datetime.utcnow().isoformat()
 
-@when('I pick a startTime from the job list')
+@when('I pick a creationTime from the job list')
 def step_impl(context):
     parsed = et.fromstring(str(context.response.text))
     elementlist = parsed.findall('.//'+str(get_UwsName("jobref")), namespaces=parsed.nsmap)
     if len(elementlist) < 2:
         raise NotImplementedError("Job list contains only %d jobs. Cannot test using this step." % len(elementlist))
-    # also cannot test this, if there are no start times!!
+    # also cannot test this, if there are no creation times!!
     # Problem: there is not even any kind of ordering in the job list that I could assume,
-    # so just search for the first two jobs that have a startTime that is not exactly the same
+    # so just search for the first two jobs that have a creationTime that is not exactly the same
 
     i = 0
-    job_startTimes = []
-    while len(job_startTimes) < 2:
-        startTime = None
-        while startTime is None and i < len(elementlist):
+    job_creationTimes = []
+    while len(job_creationTimes) < 2:
+        creationTime = None
+        while creationTime is None and i < len(elementlist):
             jobref = elementlist[-i] # use -i here, since I expect descending ordering, if any
             refId = jobref.get("id")
             link = jobref.get(get_XlinkName("href"))
@@ -298,39 +298,39 @@ def step_impl(context):
                 auth=context.auth
             )
             parsed = et.fromstring(str(response.text))
-
-            startTime = parsed.find(get_UwsName("startTime"), namespaces=parsed.nsmap).text
+            creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
             i = i + 1
 
-        if startTime is not None:
-            # convert startTime to UTC, in case it has a timezone attached:
-            date = dateutil.parser.parse(startTime)
+        if creationTime is not None:
+            # convert creationTime to UTC, in case it has a timezone attached:
+            date = dateutil.parser.parse(creationTime)
             if date.utcoffset() is not None:
                 utz = pytz.timezone('UTC')
                 date = date.astimezone(utz).replace(tzinfo=None)
                 date = date.isoformat()
             # check if it is not exactly the same as previous ones,
             # since we need different times for AFTER condition to work:
-            if date not in job_startTimes:
-                job_startTimes.append(date)
+            if date not in job_creationTimes:
+                job_creationTimes.append(date)
         else:
-            raise NotImplementedError("Cannot find enough jobs with a startTime, thus cannot test Scenarios using this. %r %r" % (link, startTime))
+            raise NotImplementedError("Cannot find enough jobs with a creationTime, thus cannot test Scenarios using this. %r %r" % (link, creationTime))
 
-    # store the smallest startTime of these to ensure that I will get at 
-    # least one result returned when filtering by this startTime
-    context.startTime_filter = min(job_startTimes)
-    # raise NotImplementedError("context.startTime_filter %r %r " % (context.startTime_filter, job_startTimes))
+    # store the smallest creationTime of these to ensure that I will get at 
+    # least one result returned when filtering by this creationTime
+    context.creationTime_filter = min(job_creationTimes)
+
+    #raise NotImplementedError("context.creationTime_filter %r %r " % (context.creationTime_filter, job_creationTimes))
 
 
-@when('I apply the AFTER filter with the stored startTime')
+@when('I apply the AFTER filter with the stored creationTime')
 def step_impl(context):
     context.execute_steps(u'''
-        When I make a GET request to "?AFTER={startTime}"
-        '''.format(startTime=context.startTime_filter)
+        When I make a GET request to "?AFTER={creationTime}"
+        '''.format(creationTime=context.creationTime_filter)
     )
     #raise NotImplementedError("context.utcdatetime: %s " % context.utcdatetime)
 
 
-    # but then ... need to make sure that these jobs actually have startTimes! Otherwise they do not count!
+    # but then ... need to make sure that these jobs actually have creationTimes! Otherwise they do not count!
     # ... could ensure this with LAST, but do not want this ...
 
