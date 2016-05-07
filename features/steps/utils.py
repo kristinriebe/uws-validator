@@ -7,15 +7,26 @@ import requests
 def append_path(url, path):
     target = URL(path)
     if target.path():
-        url = url.add_path_segment(target.path())
+        url = add_multi_path_segments(url, target.path())
     if target.query():
         url = url.query(target.query())
 
+    #print("Target: ", target.path)
     #raise NotImplementedError("target2: %r %r %r" % (target, target.query, url))
 
     return url.as_string()
 ## end
 
+def add_multi_path_segments(url, path):
+    # if there is more than one part to add to the path,
+    # then add it piecewise (otherwise, the "/" may get 
+    # url-encoded on some platforms (windows?) or with some 
+    # Python versions/installations (Anaconda?)
+    # TODO: implement a nicer way to fix this
+    piecelist = path.split("/")
+    for piece in piecelist:
+        url = url.add_path_segment(piece)
+    return url
 
 def get_UwsName(element):
     uws_1_namespace = "http://www.ivoa.net/xml/UWS/v1.0"

@@ -1,4 +1,4 @@
-from utils import append_path, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_joblink
+from utils import append_path, add_multi_path_segments, get_UwsName, get_XlinkName, get_dict_from_paramtable, get_joblink
 from lxml import etree as et
 import requests
 import uws
@@ -21,7 +21,7 @@ def using_server(context, server):
 
 @given('I set base URL to "{base_url}"')
 def set_base_url(context, base_url):
-    context.server = context.server.add_path_segment(base_url)
+    context.server = add_multi_path_segments(context.server, base_url)
 
 @given('I set "{var}" header to "{value}"')
 def set_header(context, var, value):
@@ -80,11 +80,17 @@ def set_basic_auth_headers(context):
 
 @given('I set base URL to user-defined value')
 def set_base_url(context):
-    context.server = context.server.add_path_segment(context.base_url)
+    #context.server = context.server.add_path_segment(context.base_url)
+    # This causes trouble on at least one setup (Windows 8, 64bit, Anaconda Python installation; '/' in path gets url-encoded!)
+    # Thus try to avoid this:
+    context.server = add_multi_path_segments(context.server, context.base_url)
 
 @when('I make a GET request to base URL')
 def step_impl(context):
     url = context.server
+    print("      GET request to URL: ", url)
+    print("      with authentication details: ", context.auth)
+
     context.response = requests.get(
         url,
         headers=context.headers,
@@ -93,6 +99,8 @@ def step_impl(context):
 
 @when('I make a GET request to URL "{url}"')
 def step_impl(context, url):
+    print("      GET request to URL: ", url)
+    print("      with authentication details: ", context.auth)
     context.response = requests.get(
         url,
         headers=context.headers,
@@ -106,6 +114,10 @@ def step_impl(context, url_path_segment):
     datadict = get_dict_from_paramtable(context.table)
 
     url = append_path(context.server, url_path_segment)
+
+    print("      POST request to URL: ", url)
+    print("      with authentication details: ", context.auth)
+
     context.response = requests.post(
         url,
         data=datadict,
@@ -120,7 +132,10 @@ def step_impl(context):
     datadict = get_dict_from_paramtable(context.table)
 
     url = context.server
-    #print ("url: ", url)
+
+    print("      POST request to URL: ", url)
+    print("      with authentication details: ", context.auth)
+
     context.response = requests.post(
         url,
         data=datadict,
