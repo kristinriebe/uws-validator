@@ -32,7 +32,7 @@ def step_impl(context, jobtype):
         raise NotImplementedError("Response was not 200 OK, but %d, with the message:\n%r." % (context.response.status_code, context.response.text))
     # look for jobId immediately and store it
     parsed = et.fromstring(str(context.response.text))
-    jobId = parsed.find(get_UwsName("jobId"), namespaces=parsed.nsmap).text
+    jobId = parsed.find(get_UwsName("jobId")).text
 
     context.job = uws.Job()
     context.job.set_jobId(jobId)
@@ -51,7 +51,7 @@ def step_impl(context, jobtype):
     # look for jobId immediately and store it
     parsed = et.fromstring(str(context.response.text))
     #print ("parsed: ", parsed)
-    jobId = parsed.find(get_UwsName("jobId"), namespaces=parsed.nsmap).text
+    jobId = parsed.find(get_UwsName("jobId")).text
 
     context.job = uws.Job()
     context.job.set_jobId(jobId)
@@ -169,7 +169,7 @@ def step_impl(context):
     desired_phases = ['COMPLETED', 'ERROR', 'ABORTED']
     parsed = et.fromstring(str(context.response.text))
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(get_UwsName("phase")), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName("phase")))
     for elem in elementlist:
         if elem.text in desired_phases:
             jobId = elem.getparent().get("id")
@@ -190,7 +190,7 @@ def step_impl(context):
     desired_phases = ['PENDING', 'QUEUED', 'EXECUTING']
     parsed = et.fromstring(str(context.response.text))
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(get_UwsName("phase")), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName("phase")))
     for elem in elementlist:
         if elem.text in desired_phases:
             jobId = elem.getparent().get("id")
@@ -276,7 +276,7 @@ def step_impl(context):
 @when('I pick a creationTime from the job list')
 def step_impl(context):
     parsed = et.fromstring(str(context.response.text))
-    elementlist = parsed.findall('.//'+str(get_UwsName("jobref")), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName("jobref")))
     if len(elementlist) < 2:
         raise NotImplementedError("Job list contains only %d jobs. Cannot test using this step." % len(elementlist))
     # also cannot test this, if there are no creation times!!
@@ -298,7 +298,7 @@ def step_impl(context):
                 auth=context.auth
             )
             parsed = et.fromstring(str(response.text))
-            creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
+            creationTime = parsed.find(get_UwsName("creationTime")).text
             i = i + 1
 
         if creationTime is not None:

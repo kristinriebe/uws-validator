@@ -12,6 +12,7 @@ import pytz
 
 # for job parameters in json format
 import json
+import sys
 
 
 # Steps for parsing the XML-response from a UWS service
@@ -27,7 +28,7 @@ def step_impl(context, attribute, value):
 def step_impl(context, element, attribute):
     parsed = et.fromstring(str(context.response.text))
     # get elements:
-    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)))
     for elem in elementlist:
         # check if attribute exists in list of attributes:
         ensure(attribute).is_in(elem.attrib)
@@ -37,14 +38,14 @@ def step_impl(context, element, attribute):
 def step_impl(context, element):
     parsed = et.fromstring(str(context.response.text))
     #raise NotImplementedError("%r" % parsed)
-    found = parsed.find(get_UwsName(element), namespaces=parsed.nsmap)
+    found = parsed.find(get_UwsName(element))
     ensure(found).is_not_none()
 
 @then('the UWS element "{element}" should not be None')
 def step_impl(context, element):
     parsed = et.fromstring(str(context.response.text))
     #raise NotImplementedError("%r" % parsed)
-    foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UwsName(element)).text
     ensure(foundvalue).is_not_none()
 
 @then('the UWS root element should be "{root}"')
@@ -58,13 +59,13 @@ def step_impl(context, root):
 def step_impl(context, element, values):
     #raise NotImplementedError('%r' %  context.response.text)
     parsed = et.fromstring(str(context.response.text))
-    foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UwsName(element)).text
     ensure(foundvalue).is_in([value.strip() for value in values.split(',')])
 
 @then('the UWS element "{element}" should be "{value}"')
 def step_impl(context, element, value):
     parsed = et.fromstring(str(context.response.text))
-    foundvalue = parsed.find(get_UwsName(element), namespaces=parsed.nsmap).text
+    foundvalue = parsed.find(get_UwsName(element)).text
     ensure(foundvalue).equals(value)
 
 @then('the UWS root element should contain UWS elements "{child}"')
@@ -76,9 +77,9 @@ def step_impl(context, child):
 @then('each UWS element "{element}" should have an element "{child}"')
 def step_impl(context, element, child):
     parsed = et.fromstring(str(context.response.text))
-    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)))
     for elem in elementlist:
-        subelement = elem.find(get_UwsName(child), namespaces=parsed.nsmap)
+        subelement = elem.find(get_UwsName(child))
         ensure(subelement).is_not_none()
 
 @then('all UWS elements "{element}" should be one of "{values}"')
@@ -86,7 +87,7 @@ def step_impl(context, element, values):
     values = [value.strip() for value in values.split(',')]
     parsed = et.fromstring(str(context.response.text))
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)))
     #raise NotImplementedError('%r, %r' % (elementlist, uwselement))
     for elem in elementlist:
         ensure(elem.text).is_in(values)
@@ -96,7 +97,7 @@ def step_impl(context, element, values):
 def step_impl(context, element, value):
     parsed = et.fromstring(str(context.response.text))
     # find all elements, anywhere in the tree
-    elementlist = parsed.findall('.//'+str(get_UwsName(element)), namespaces=parsed.nsmap)
+    elementlist = parsed.findall('.//'+str(get_UwsName(element)))
     for elem in elementlist:
         ensure(elem.text).equals(value)
 
@@ -104,19 +105,19 @@ def step_impl(context, element, value):
 # TODO: this also validates as True, if there is no job at all
 def step_impl(context, element, last):
     parsed = et.fromstring(str(context.response.text))
-    count = len(parsed.findall(get_UwsName(element), namespaces=parsed.nsmap))
+    count = len(parsed.findall(get_UwsName(element)))
     ensure(count).is_less_than_or_equal_to(int(last))
 
 @then('the number of UWS elements "{element}" should be greater than or equal to "{number}"')
 def step_impl(context, element, number):
     parsed = et.fromstring(str(context.response.text))
-    count = len(parsed.findall(get_UwsName(element), namespaces=parsed.nsmap))
+    count = len(parsed.findall(get_UwsName(element)))
     ensure(count).is_greater_than_or_equal_to(int(number))
 
 @then('the number of UWS elements "{element}" should be "{number}"')
 def step_impl(context, element, number):
     parsed = et.fromstring(str(context.response.text))
-    count = len(parsed.findall(get_UwsName(element), namespaces=parsed.nsmap))
+    count = len(parsed.findall(get_UwsName(element)))
     ensure(count).equals(int(number))
 
 
@@ -125,7 +126,7 @@ def step_impl(context, element, number):
 def step_impl(context, timestamp):
     #raise NotImplementedError(context.response.text)
     parsed = et.fromstring(str(context.response.text))
-    creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
+    creationTime = parsed.find(get_UwsName("creationTime")).text
     # make sure there is a creationTime (NULL creationTime should be ignored with AFTER filter)
     check(creationTime).is_not_none().or_raise(Exception, "Error with creationTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
 
@@ -146,7 +147,7 @@ def step_impl(context, timestamp):
 @then('the UWS job creationTime should be later than or equal to "{timestamp}"')
 def step_impl(context, timestamp):
     parsed = et.fromstring(str(context.response.text))
-    creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
+    creationTime = parsed.find(get_UwsName("creationTime")).text
     check(creationTime).is_not_none().or_raise(Exception, "Error with creationTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
 
     # convert creationTime to UTC, in case it has a timezone attached:
@@ -166,7 +167,7 @@ def step_impl(context, timestamp):
 @then('the UWS job creationTime should be earlier than or equal to "{timestamp}"')
 def step_impl(context, timestamp):
     parsed = et.fromstring(str(context.response.text))
-    creationTime = parsed.find(get_UwsName("creationTime"), namespaces=parsed.nsmap).text
+    creationTime = parsed.find(get_UwsName("creationTime")).text
     check(creationTime).is_not_none().or_raise(Exception, "Error with creationTime: {msg}. Job link is %s. The http response was: %r" % (context.joblink, context.response))
 
     # convert creationTime to UTC, in case it has a timezone attached:
@@ -187,7 +188,7 @@ def step_impl(context, timestamp):
 def step_impl(context, timestamp):
     parsed = et.fromstring(str(context.response.text))
     element = "jobref"
-    jobreflist = parsed.findall(get_UwsName(element), namespaces=parsed.nsmap)
+    jobreflist = parsed.findall(get_UwsName(element))
     for jobref in jobreflist:
         refId = jobref.get("id")
         link = jobref.get(get_XlinkName("href"))
@@ -214,7 +215,7 @@ def step_impl(context):
 def step_impl(context):
     parsed = et.fromstring(str(context.response.text))
     element = "jobref"
-    jobreflist = parsed.findall(get_UwsName(element), namespaces=parsed.nsmap)
+    jobreflist = parsed.findall(get_UwsName(element))
     timestamp = '2999-01-01T00:00:00'
     for jobref in jobreflist:
         refId = jobref.get("id")
