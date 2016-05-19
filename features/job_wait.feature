@@ -74,7 +74,7 @@ Feature: Job
      And I use advanced blocking with WAIT="120" and PHASE="QUEUED"
      # NOTE: this assumes that the QUEUED-phase is < 120 seconds and < server timeout!
      # There is no guarantee for this!
-     And I use advanced blocking with WAIT="15" and PHASE="EXECUTING"
+     And I use advanced blocking with WAIT="30" and PHASE="EXECUTING"
     Then the server should not return immediately
      # NOTE: But server may return immediately if users are overusing resources!!!
      And the request time should be shorter than the wait time
