@@ -212,7 +212,7 @@ def step_impl(context, waittime):
     context.waittime = int(waittime) # check?
     endtime = datetime.now()
     difftime = endtime - starttime
-    context.requesttime = difftime.seconds
+    context.requesttime = difftime.total_seconds()
     # TODO: maybe check that days is 0 first
 
 
@@ -228,8 +228,7 @@ def step_impl(context, waittime, phase):
     context.waittime = int(waittime) # check?
     endtime = datetime.now()
     difftime = endtime - starttime
-    context.requesttime = difftime.microseconds/1.e6
-    # TODO: maybe check that days is 0 first
+    context.requesttime = difftime.total_seconds()
 
 
 ## Timing issues
