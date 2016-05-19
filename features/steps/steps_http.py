@@ -36,6 +36,10 @@ def set_basic_auth_headers(context, username, password):
 @when('I make a GET request to "{url_path_segment}"')
 def step_impl(context, url_path_segment):
     url = append_path(context.server, url_path_segment)
+    print("      GET request to: ", url)
+    if context.auth != (u'', u''):
+        print("      with authentication details: ", context.auth)
+
 #    if not url_path_segment.startswith('?'):
     # raise NotImplementedError("url: %r" % url)
     context.response = requests.get(
@@ -89,7 +93,8 @@ def set_base_url(context):
 def step_impl(context):
     url = context.server
     print("      GET request to URL: ", url)
-    print("      with authentication details: ", context.auth)
+    if context.auth != (u'', u''):
+        print("      with authentication details: ", context.auth)
 
     context.response = requests.get(
         url,
@@ -100,7 +105,8 @@ def step_impl(context):
 @when('I make a GET request to URL "{url}"')
 def step_impl(context, url):
     print("      GET request to URL: ", url)
-    print("      with authentication details: ", context.auth)
+    if context.auth != (u'', u''):
+        print("      with authentication details: ", context.auth)
     context.response = requests.get(
         url,
         headers=context.headers,
@@ -116,7 +122,8 @@ def step_impl(context, url_path_segment):
     url = append_path(context.server, url_path_segment)
 
     print("      POST request to URL: ", url)
-    print("      with authentication details: ", context.auth)
+    if context.auth != (u'', u''):
+        print("      with authentication details: ", context.auth)
 
     context.response = requests.post(
         url,
