@@ -53,9 +53,11 @@ def after_scenario(context, scenario):
     if context.created_jobs:
         jobs = list(context.created_jobs)
         for jobId in jobs:
-            #delete_job(context, jobId)
-            context.removed_jobs.append(jobId)
-            context.created_jobs.remove(jobId)
+            flag = delete_job(context, jobId)
+            if flag == True:
+                context.removed_jobs.append(jobId)
+                context.created_jobs.remove(jobId)
+
 
 def after_feature(context, feature):
     print("Clean-up: removing the created test jobs")
@@ -63,8 +65,7 @@ def after_feature(context, feature):
 #        print("The removed jobIds are (so far): %r" % context.removed_jobs)
     if len(context.created_jobs) > 0:
         print("Remaining created jobIds: %r" % context.created_jobs)
-    # Note: this also works across features!def after_feature(context, feature):
-
+    # Note: this also works across features!
 
 
 def after_all(context):

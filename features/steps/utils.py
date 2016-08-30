@@ -71,9 +71,12 @@ def delete_job(context, jobId):
     except:
         print("Cannot delete job with id %s" % jobId)
         raise
+
     if response.status_code != 200:
         print ("Job deletion was not successful: %s, %s" % (jobId, response.text))
+        return False
 
+    return True
 
 def get_joblink(server, link, refId):
     # Check, if the link is absolute,
